@@ -19,6 +19,8 @@ Before starting, confirm equivalent capabilities exist:
 - DEVONthink tools for selecting a destination and importing files, such as `get_databases`, `import_file`, or equivalents.
 - A normal writable temporary filesystem path outside any `.dtBase2`, `.dtSparse`, or `.dtArchive` package.
 
+In Codex Desktop, explicit thread tools may be unavailable even when local equivalents exist. Before declaring thread access missing or offering a reduced workflow, check for `CODEX_THREAD_ID`, `~/.codex/sessions/**/rollout-*-<thread-id>.jsonl`, `~/.codex/session_index.jsonl`, and `~/.codex/archived_sessions/`. These can satisfy identifying and reading the current thread. Treat them as equivalent capabilities when they exist and are readable; use narrow metadata/count checks first and do not dump raw transcript content into the response.
+
 If a required capability, MCP server, plugin, app integration, or dependency is missing and no equivalent exists, stop and name the missing item. Do not silently skip DEVONthink import or thread archiving unless the user explicitly chooses a reduced workflow.
 
 ## Workflow
@@ -176,6 +178,7 @@ Use the template as a guide, not a rigid form. Omit sections only when they add 
 | Mistake | Fix |
 | --- | --- |
 | Exact example tool name is unavailable | Use an equivalent capability; stop only when the capability is missing. |
+| Codex Desktop lacks `read_thread`/`list_threads` tools | Check `CODEX_THREAD_ID`, local rollout JSONL files, and `session_index.jsonl` before claiming the thread cannot be read. |
 | Writing inside a DEVONthink database package | Write temporary files elsewhere and import through DEVONthink tools. |
 | Naming file `YYYY-MM-DD-codex-archive-...md` or adding `HH:mm` | Use `YYYY-MM-DD <对话解决的问题>（Codex 归档）.md`. |
 | Transcript dump or assistant-centric summary | Write a first-person retrospective with context, actions, results, decisions, and lessons. |
