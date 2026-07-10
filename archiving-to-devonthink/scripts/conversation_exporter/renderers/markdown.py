@@ -4,8 +4,11 @@ import json
 import re
 from typing import Any
 
-from conversation_exporter.model import Conversation, Message, ToolCall
-from conversation_exporter.utils import sanitize_heading_depth, truncate_text
+from conversation_exporter.model import Conversation, Message
+from conversation_exporter.utils import sanitize_heading_depth
+
+
+SKILL_BLOCK_RE = re.compile(r"<skill\b[^>]*>.*?</skill>", re.IGNORECASE | re.DOTALL)
 
 
 def render_conversation(conversation: Conversation) -> str:
@@ -47,53 +50,21 @@ def render_message(message: Message) -> str:
     if message.role not in {"user", "assistant"}:
         return ""
     heading = "## 用户" if message.role == "user" else "## AI"
-    parts = [heading, "", sanitize_heading_depth(message.content).strip()]
-    rendered_message = "\n".join(parts).rstrip()
-    if message.role == "user" and message.tool_calls:
-        return "\n\n".join([rendered_message, "## AI", "\n\n".join(render_tool_call(call) for call in message.tool_calls)])
-    for tool_call in message.tool_calls:
-        parts.extend(["", render_tool_call(tool_call)])
+    parts = [heading, "", sanitize_heading_depth(_lightweight_message_content(message.content)).strip()]
     return "\n".join(parts).rstrip()
 
 
-def render_tool_call(tool_call: ToolCall) -> str:
-    parts = [f"### 工具调用：{_tool_name_label(tool_call.name)}", ""]
-    if tool_call.call_id:
-        parts.extend([f"- call_id: `{_tool_name_label(tool_call.call_id)}`"])
-    if tool_call.status:
-        parts.extend([f"- status: `{_tool_name_label(tool_call.status)}`"])
-    if tool_call.arguments not in (None, "", {}):
-        parts.extend(["", "```json", _json_dump_limited(tool_call.arguments), "```"])
-    if tool_call.output_summary:
-        parts.extend(["", "### 工具输出摘要", "", _text_code_fence(truncate_text(tool_call.output_summary))])
-    return "\n".join(parts)
+def _lightweight_message_content(content: str) -> str:
+    return SKILL_BLOCK_RE.sub(_skill_placeholder, content)
 
 
-def _json_dump_limited(value: Any) -> str:
-    if isinstance(value, str):
-        try:
-            parsed = json.loads(value)
-        except json.JSONDecodeError:
-            return json.dumps(truncate_text(value, limit=1200), ensure_ascii=False)
-        return _json_dump_limited(parsed)
-    try:
-        rendered = json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True)
-    except TypeError:
-        return json.dumps(truncate_text(value, limit=1200), ensure_ascii=False)
-    if len(rendered) > 1200:
-        return json.dumps(truncate_text(value, limit=1200), ensure_ascii=False)
-    return rendered
-
-
-def _text_code_fence(value: str) -> str:
-    text = value.rstrip("\n")
-    longest_backtick_run = max((len(match.group(0)) for match in re.finditer(r"`+", text)), default=0)
-    fence = "`" * max(3, longest_backtick_run + 1)
-    return f"{fence}text\n{text}\n{fence}"
-
-
-def _tool_name_label(name: str) -> str:
-    return re.sub(r"\s+", " ", str(name)).strip() or "unknown"
+def _skill_placeholder(match: re.Match[str]) -> str:
+    block = match.group(0)
+    name_match = re.search(r"<name>\s*(.*?)\s*</name>", block, re.IGNORECASE | re.DOTALL)
+    if not name_match:
+        return "[已省略 skill 原文]"
+    name = re.sub(r"\s+", " ", name_match.group(1)).strip()
+    return f"[已省略 skill 原文：{name}]" if name else "[已省略 skill 原文]"
 
 
 def _yaml_scalar(value: Any) -> str:

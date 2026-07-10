@@ -7,9 +7,9 @@ description: Use when the user asks Codex to archive, tidy, summarize, preserve,
 
 ## Overview
 
-Turn a Codex thread into two Markdown archive records: a concise Chinese retrospective and a complete readable transcript. Import both into DEVONthink, delete temporary local files only after both imports are confirmed, then ask before archiving the Codex thread unless the user already authorized that final step.
+Turn a Codex thread into two Markdown archive records: a concise Chinese retrospective and a lightweight readable transcript. Import both into DEVONthink, delete temporary local files only after both imports are confirmed, then ask before archiving the Codex thread unless the user already authorized that final step.
 
-Write the retrospective for the user's future self: natural, concrete, first-person where appropriate, focused on what the conversation solved and why the path mattered. Preserve the transcript separately for evidence and search. Never include private chain-of-thought.
+Write the retrospective for the user's future self: natural, concrete, first-person where appropriate, focused on what the conversation solved and why the path mattered. Preserve the transcript separately for evidence and search, but keep it compact: user/assistant wording matters more than raw skill dumps, tool arguments, or tool outputs. Never include private chain-of-thought.
 
 ## Required Capabilities
 
@@ -38,7 +38,7 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Collect thread metrics when available: start time, end time or archive time, total elapsed duration, user message count, assistant response count, tool-call count, and number of resumptions or context-compaction events.
    - If exact metrics are unavailable, estimate from available timestamps or thread-tool metadata and label the value as approximate. Do not invent precision.
    - Identify repeated or difficult discussion loops: errors that appeared more than once, decisions revisited, assumptions corrected, blocked capabilities, approval or permission friction, and changes in direction.
-   - Preserve concrete anchors for later recall: important commands, files, tool names, destination names, dates, links, and error text.
+   - Preserve concrete anchors for later recall: important commands, files, tool names, destination names, dates, links, and error text. Keep anchors concise; do not copy raw tool payloads or long reference documents just because they appeared in the thread.
 
 3. Generate the original transcript Markdown.
    - Use the bundled exporter in this skill when local Codex JSONL or ChatGPT official export files are available.
@@ -56,7 +56,7 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
 
    - If the current thread is only available through conversation context or thread tools, build an equivalent transcript manually using the transcript Markdown rules below.
    - Save transcript files in a normal temporary output directory, never inside source input directories or DEVONthink database packages.
-   - The transcript is allowed to preserve raw user/assistant wording and tool evidence, but must not include private chain-of-thought.
+   - The transcript should preserve the useful shape of user/assistant wording, but it is intentionally lightweight. Omit raw tool-call sections, tool arguments, tool outputs, full skill contents, and other long pasted reference blocks unless the user explicitly asks for a forensic transcript.
 
 4. Write the temporary Markdown retrospective note.
    - Save in a normal output location, never inside a DEVONthink database package.
@@ -89,7 +89,7 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Retrospective note includes an `## 原文记录` section pointing to the transcript import when DEVONthink returns an identifiable record.
    - Transcript role markers are second-level headings: `## 用户` and `## AI`.
    - Transcript body content outside frontmatter and code blocks has no level-one headings, no non-role second-level headings, and no headings deeper than level three.
-   - Tool calls in the transcript include tool name and key parameters; long output is summarized/truncated and fenced as code.
+   - Transcript omits raw tool-call sections, `call_id`, tool arguments, tool outputs, and full skill/document dumps unless the user explicitly asked for a forensic transcript.
    - If the thread had repeated or difficult issues, retrospective note names them and explains the final resolution or remaining uncertainty.
 
 7. Delete the temporary local Markdown files.
@@ -150,14 +150,11 @@ Use the same solved-problem phrase as the retrospective whenever possible, so th
   - `# ...`, `## ...`, `#### ...`, and deeper become `### ...`.
   - Setext headings (`Title` followed by `---` or `===`) become `### Title`.
   - Preserve headings inside fenced code blocks, blockquote/list-contained fenced code blocks, and indented code blocks.
-- Tool calls render under the related `## AI` section:
-  - `### 工具调用：<tool name>`
-  - include `call_id`, status, and key arguments when available.
-  - render arguments as fenced JSON when possible.
-  - render output summaries under `### 工具输出摘要` inside a `text` code fence.
-  - truncate or summarize long output; do not dump massive logs.
-- For Codex local JSONL, capture `function_call`, `custom_tool_call`, `tool_search_call`, and `web_search_call` style events when available.
-- For `custom_tool_call`, treat `input` as arguments when `arguments` is absent.
+- Tool calls are not rendered by default. Use them for metrics and retrospective synthesis only.
+- Do not render `call_id`, status, raw arguments, or tool output summaries in the transcript.
+- Omit full skill contents and long pasted reference blocks from message bodies; leave a short placeholder such as `[已省略 skill 原文：archiving-to-devonthink]`.
+- If tool use is necessary for later recall, mention the outcome briefly in the retrospective, not as raw transcript payload.
+- For Codex local JSONL, parse `function_call`, `custom_tool_call`, `tool_search_call`, and `web_search_call` style events when available for counts and context, but keep them out of the transcript body.
 - For ChatGPT official exports, follow the current-node conversation path and preserve only user/assistant turns.
 
 ## Writing Style
@@ -167,7 +164,7 @@ Use the same solved-problem phrase as the retrospective whenever possible, so th
 - Use `Codex` only for assistant actions.
 - Avoid assistant-centric phrasing like "the user asked..." when first-person is clearer.
 - Do not invent emotions, motives, preferences, commands, files, destinations, or outcomes.
-- Preserve exact names for paths, commands, tool names, dates, links, and DEVONthink destinations.
+- Preserve exact names for paths, commands, tool names, dates, links, and DEVONthink destinations when they are useful anchors. Do not preserve full skill text or raw tool payloads unless explicitly requested.
 - Keep prose concise unless the thread has substantial implementation or debugging history.
 - Prefer synthesis over chronology: write what changed, what was decided, and what I should remember, not every message in order.
 - Do not paste the full transcript into the retrospective. Link or name the separate transcript record instead.
@@ -249,7 +246,7 @@ Use the template as a guide, not a rigid form. Omit sections only when they add 
 | Only summarizing outcome, without thread evidence | Include available duration, turn counts, tool-call count, concrete anchors, and key output. |
 | Generating only the summary and losing original wording | Produce and import both records, then delete temporary files only after both imports are confirmed. |
 | Transcript Markdown uses arbitrary `##` headings from message content | Normalize message headings so only `## 用户` and `## AI` remain as body second-level headings. |
-| Tool output breaks Markdown structure | Put tool output summaries in fenced `text` code blocks and truncate long output. |
+| Transcript includes raw tool calls or skill dumps | Omit them by default; keep only concise placeholders or retrospective anchors. |
 | Omitting repeated friction because it feels messy | Summarize the repeated issue, why it mattered, and how it was resolved or left open. |
 | Inventing exact metrics when tools do not expose them | Use approximate language or say the metric was unavailable. |
 | Body text directly under a heading | Leave exactly one blank line after each section heading. |
