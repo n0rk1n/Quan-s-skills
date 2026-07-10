@@ -7,9 +7,9 @@ description: Use when the user asks Codex to archive, tidy, summarize, preserve,
 
 ## Overview
 
-Turn a Codex thread into a concise Chinese Markdown retrospective, import it into DEVONthink, delete the temporary local file only after confirmed import, then ask before archiving the Codex thread unless the user already authorized that final step.
+Turn a Codex thread into two Markdown archive records: a concise Chinese retrospective and a complete readable transcript. Import both into DEVONthink, delete temporary local files only after both imports are confirmed, then ask before archiving the Codex thread unless the user already authorized that final step.
 
-Write for the user's future self: natural, concrete, first-person where appropriate, focused on what the conversation solved and why the path mattered. A good archive is worth rereading months later: it preserves concrete evidence, the shape of the work, repeated sticking points, decisions, and lessons. Never dump the transcript or include private chain-of-thought.
+Write the retrospective for the user's future self: natural, concrete, first-person where appropriate, focused on what the conversation solved and why the path mattered. Preserve the transcript separately for evidence and search. Never include private chain-of-thought.
 
 ## Required Capabilities
 
@@ -18,6 +18,7 @@ Before starting, confirm equivalent capabilities exist:
 - Codex thread tools for identifying, reading, and archiving threads, such as `read_thread`, `list_threads`, `set_thread_archived`, or equivalents.
 - DEVONthink tools for selecting a destination and importing files, such as `get_databases`, `import_file`, or equivalents.
 - A normal writable temporary filesystem path outside any `.dtBase2`, `.dtSparse`, or `.dtArchive` package.
+- Python 3 for the bundled transcript exporter at `scripts/conversation_exporter`.
 
 In Codex Desktop, explicit thread tools may be unavailable even when local equivalents exist. Before declaring thread access missing or offering a reduced workflow, check for `CODEX_THREAD_ID`, `~/.codex/sessions/**/rollout-*-<thread-id>.jsonl`, `~/.codex/session_index.jsonl`, and `~/.codex/archived_sessions/`. These can satisfy identifying and reading the current thread. Treat them as equivalent capabilities when they exist and are readable; use narrow metadata/count checks first and do not dump raw transcript content into the response.
 
@@ -39,51 +40,77 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Identify repeated or difficult discussion loops: errors that appeared more than once, decisions revisited, assumptions corrected, blocked capabilities, approval or permission friction, and changes in direction.
    - Preserve concrete anchors for later recall: important commands, files, tool names, destination names, dates, links, and error text.
 
-3. Write the temporary Markdown note.
+3. Generate the original transcript Markdown.
+   - Use the bundled exporter in this skill when local Codex JSONL or ChatGPT official export files are available.
+   - From this skill directory, run Codex exports with:
+
+     ```bash
+     PYTHONPATH="$PWD/scripts" python3 -m conversation_exporter.cli codex --input <jsonl-or-directory> --thread <thread-id> --out <temporary-output-dir>
+     ```
+
+   - For ChatGPT official export files, run:
+
+     ```bash
+     PYTHONPATH="$PWD/scripts" python3 -m conversation_exporter.cli chatgpt --input <chatgpt-export.zip-or-conversations.json> --out <temporary-output-dir>
+     ```
+
+   - If the current thread is only available through conversation context or thread tools, build an equivalent transcript manually using the transcript Markdown rules below.
+   - Save transcript files in a normal temporary output directory, never inside source input directories or DEVONthink database packages.
+   - The transcript is allowed to preserve raw user/assistant wording and tool evidence, but must not include private chain-of-thought.
+
+4. Write the temporary Markdown retrospective note.
    - Save in a normal output location, never inside a DEVONthink database package.
-   - Filename must follow the filename rule below.
+   - Filename must follow the retrospective filename rule below.
    - Use Chinese section headings and no level-one heading (`# ...`).
    - Leave exactly one blank line after every section heading before body text or lists.
    - Prefer STAR shape: background/situation, task, actions, result, decisions, lessons, useful commands/files/links, follow-ups.
    - Include a concise conversation summary block with the metrics from step 2 when they are available or useful.
+   - Include an `## 原文记录` section naming the transcript file and, after import, the DEVONthink record UUID/link when available.
    - Include a section for hard or repeated issues when the thread contained friction, retries, reversals, debugging loops, unclear requirements, missing tools, or permission boundaries.
    - Optimize for future review, not completeness: omit trivial turn-by-turn narration and keep the material that explains what was learned, decided, fixed, or still needs attention.
 
-4. Import into DEVONthink.
+5. Import both Markdown files into DEVONthink.
    - Use DEVONthink MCP tools only; never modify database package contents directly.
    - Prefer the Global Inbox database when present (`is_inbox: true`).
    - If no Global Inbox is available, use the current database's `incomingGroupUUID` or ask the user for a destination.
    - Import with `mode: import`.
    - Treat import as confirmed only when the tool returns success plus an identifiable destination: database/group name, record UUID, item URL, or imported path.
+   - Import the transcript and retrospective as separate records. Prefer importing the transcript first, then the retrospective with its `## 原文记录` section updated to reference the imported transcript.
+   - If DEVONthink tools support tags or comments, tag/link the two records consistently; do not rely on tags as the only relationship.
 
-5. Validate before deletion.
-   - DEVONthink reported success.
-   - Destination is identifiable.
-   - Imported item name matches the filename rule.
-   - No file was written inside `.dtBase2`, `.dtSparse`, or `.dtArchive`.
-   - Generated note has no level-one heading, all generated headings are Chinese, heading spacing is correct, and no private chain-of-thought is present.
-   - Generated note includes conversation metrics when available, or clearly says when they were unavailable.
-   - If the thread had repeated or difficult issues, generated note names them and explains the final resolution or remaining uncertainty.
+6. Validate before deletion.
+   - DEVONthink reported success for both retrospective and transcript.
+   - Both destinations are identifiable.
+   - Imported retrospective item name matches the retrospective filename rule.
+   - Imported transcript item name matches the transcript filename rule.
+   - No file was written inside `.dtBase2`, `.dtSparse`, `.dtArchive`, or source input directories.
+   - Retrospective note has no level-one heading, all generated headings are Chinese, heading spacing is correct, and no private chain-of-thought is present.
+   - Retrospective note includes conversation metrics when available, or clearly says when they were unavailable.
+   - Retrospective note includes an `## 原文记录` section pointing to the transcript import when DEVONthink returns an identifiable record.
+   - Transcript role markers are second-level headings: `## 用户` and `## AI`.
+   - Transcript body content outside frontmatter and code blocks has no level-one headings, no non-role second-level headings, and no headings deeper than level three.
+   - Tool calls in the transcript include tool name and key parameters; long output is summarized/truncated and fenced as code.
+   - If the thread had repeated or difficult issues, retrospective note names them and explains the final resolution or remaining uncertainty.
 
-6. Delete the temporary local Markdown file.
-   - Delete only the file created for this workflow.
-   - Delete only after confirmed import with identifiable destination.
-   - If import is ambiguous or deletion fails, keep/report the local path.
+7. Delete the temporary local Markdown files.
+   - Delete only files created for this workflow.
+   - Delete only after both imports are confirmed with identifiable destinations.
+   - If either import is ambiguous or deletion fails, keep/report the local paths.
 
-7. Ask before archiving the Codex thread.
+8. Ask before archiving the Codex thread.
    - After successful import, ask whether to archive the Codex thread now.
    - Use `set_thread_archived` only after confirmation, or when the original request explicitly pre-authorized archiving after import.
    - If import fails, do not ask for archive confirmation and do not archive unless the user explicitly says to archive anyway.
 
-8. Report import and thread-archive status separately.
-   - Mention the DEVONthink destination.
-   - Mention whether the temporary local file was deleted or provide its path.
+9. Report import and thread-archive status separately.
+   - Mention the DEVONthink destinations for both retrospective and transcript.
+   - Mention whether the temporary local files were deleted or provide their paths.
    - Mention whether the Codex thread was archived, is waiting for confirmation, or cannot be archived because a required capability is unavailable.
    - A successful DEVONthink import with an unarchived thread is partial completion, not a failed archive note.
 
-## Filename Rule
+## Filename Rules
 
-Use this exact pattern:
+Retrospective file:
 
 ```text
 YYYY-MM-DD <对话解决的问题>（Codex 归档）.md
@@ -103,6 +130,36 @@ Rules:
 - Prefer solved-problem phrasing, such as `解决 sql 查询报错`, `梳理 DEVONthink 归档流程`, or `总结支付回调排查经验`.
 - Remove or replace filename-unsafe characters such as `/` and newlines.
 
+Transcript file:
+
+```text
+YYYY-MM-DD <对话解决的问题>（Codex 原文）.md
+```
+
+Use the same solved-problem phrase as the retrospective whenever possible, so the two records sort together.
+
+## Transcript Markdown Rules
+
+- One conversation becomes one Markdown file.
+- Metadata may be written in YAML frontmatter.
+- Role markers are the only second-level headings in transcript body:
+  - `## 用户`
+  - `## AI`
+- Message content outside frontmatter and code blocks must not render as headings deeper than level three.
+- Normalize user/assistant content headings outside code blocks:
+  - `# ...`, `## ...`, `#### ...`, and deeper become `### ...`.
+  - Setext headings (`Title` followed by `---` or `===`) become `### Title`.
+  - Preserve headings inside fenced code blocks, blockquote/list-contained fenced code blocks, and indented code blocks.
+- Tool calls render under the related `## AI` section:
+  - `### 工具调用：<tool name>`
+  - include `call_id`, status, and key arguments when available.
+  - render arguments as fenced JSON when possible.
+  - render output summaries under `### 工具输出摘要` inside a `text` code fence.
+  - truncate or summarize long output; do not dump massive logs.
+- For Codex local JSONL, capture `function_call`, `custom_tool_call`, `tool_search_call`, and `web_search_call` style events when available.
+- For `custom_tool_call`, treat `input` as arguments when `arguments` is absent.
+- For ChatGPT official exports, follow the current-node conversation path and preserve only user/assistant turns.
+
 ## Writing Style
 
 - Match the thread language; use Chinese when the user asked in Chinese or the thread is mainly Chinese.
@@ -113,6 +170,7 @@ Rules:
 - Preserve exact names for paths, commands, tool names, dates, links, and DEVONthink destinations.
 - Keep prose concise unless the thread has substantial implementation or debugging history.
 - Prefer synthesis over chronology: write what changed, what was decided, and what I should remember, not every message in order.
+- Do not paste the full transcript into the retrospective. Link or name the separate transcript record instead.
 - When including metrics, use readable phrasing such as `约 42 分钟`, `我发起 6 轮请求`, `Codex 使用 14 次工具调用`. Mark uncertain numbers with `约` or `可见记录中`.
 - For repeated issues, name the pattern and consequence: `反复卡在权限边界`, `多次确认目标 skill`, `工具能力缺失导致降级方案`.
 
@@ -166,6 +224,11 @@ Rules:
 - `command`
 - [file](absolute path)
 
+## 原文记录
+
+- 原文文件：<transcript filename>
+- DEVONthink 记录：<record UUID or item URL, or unavailable>
+
 ## 后续事项
 
 暂无
@@ -181,8 +244,12 @@ Use the template as a guide, not a rigid form. Omit sections only when they add 
 | Codex Desktop lacks `read_thread`/`list_threads` tools | Check `CODEX_THREAD_ID`, local rollout JSONL files, and `session_index.jsonl` before claiming the thread cannot be read. |
 | Writing inside a DEVONthink database package | Write temporary files elsewhere and import through DEVONthink tools. |
 | Naming file `YYYY-MM-DD-codex-archive-...md` or adding `HH:mm` | Use `YYYY-MM-DD <对话解决的问题>（Codex 归档）.md`. |
-| Transcript dump or assistant-centric summary | Write a first-person retrospective with context, actions, results, decisions, and lessons. |
+| Transcript dump inside the retrospective | Generate a separate `（Codex 原文）` transcript and link it from `## 原文记录`. |
+| Assistant-centric summary | Write a first-person retrospective with context, actions, results, decisions, and lessons. |
 | Only summarizing outcome, without thread evidence | Include available duration, turn counts, tool-call count, concrete anchors, and key output. |
+| Generating only the summary and losing original wording | Produce and import both records, then delete temporary files only after both imports are confirmed. |
+| Transcript Markdown uses arbitrary `##` headings from message content | Normalize message headings so only `## 用户` and `## AI` remain as body second-level headings. |
+| Tool output breaks Markdown structure | Put tool output summaries in fenced `text` code blocks and truncate long output. |
 | Omitting repeated friction because it feels messy | Summarize the repeated issue, why it mattered, and how it was resolved or left open. |
 | Inventing exact metrics when tools do not expose them | Use approximate language or say the metric was unavailable. |
 | Body text directly under a heading | Leave exactly one blank line after each section heading. |

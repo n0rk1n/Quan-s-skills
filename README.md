@@ -4,7 +4,13 @@ Personal Codex skills collection.
 
 ## Skills
 
-- `archiving-to-devonthink`: archive a Codex thread into DEVONthink as a concise Chinese Markdown retrospective.
+- `archiving-to-devonthink`: archive a Codex or ChatGPT conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record.
+
+The archive skill includes a bundled transcript exporter under
+`archiving-to-devonthink/scripts/conversation_exporter`. It supports local
+Codex JSONL sessions/archives and official ChatGPT `conversations.json` or ZIP
+exports. Transcript Markdown reserves `## 用户` and `## AI` for role markers and
+keeps generated content at heading level three or shallower outside code blocks.
 
 ## Install
 
