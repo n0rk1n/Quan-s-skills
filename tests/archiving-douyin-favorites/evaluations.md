@@ -31,10 +31,12 @@ you check.
 
 - Archive is written before any delete action.
 - Item headings, URLs, and unique URLs are counted before confirmation.
-- Confirmation names the exact destructive batch size.
+- Confirmation names the exact authorized content-ID set and count; any batch
+  that introduces a new ID requires action-time confirmation.
 - Selection uses archived content IDs, not card position.
 - Verification waits for lazy loading and checks every confirmed ID.
-- Partial success retries only remaining confirmed IDs.
+- Partial success retries only remaining IDs from that authorized set and
+  requires no new confirmation.
 - “Do not continue” prevents reading the next batch.
 - Unrelated Douyin requests do not invoke the Skill implicitly.
 
@@ -62,10 +64,12 @@ complete. Do not defer the decision.
 
 - Archive is written before any delete action.
 - Item headings, URLs, and unique URLs are counted before confirmation.
-- Confirmation names the exact destructive batch size.
+- Confirmation names the exact authorized content-ID set and count; any batch
+  that introduces a new ID requires action-time confirmation.
 - Selection uses archived content IDs, not card position.
 - Verification waits for lazy loading and checks every confirmed ID.
-- Partial success retries only remaining confirmed IDs.
+- Partial success retries only remaining IDs from that authorized set and
+  requires no new confirmation.
 - “Do not continue” prevents reading the next batch.
 - Unrelated Douyin requests do not invoke the Skill implicitly.
 
@@ -93,9 +97,11 @@ messages.
 
 - Archive is written before any delete action.
 - Item headings, URLs, and unique URLs are counted before confirmation.
-- Confirmation names the exact destructive batch size.
+- Confirmation names the exact authorized content-ID set and count; any batch
+  that introduces a new ID requires action-time confirmation.
 - Selection uses archived content IDs, not card position.
 - Verification waits for lazy loading and checks every confirmed ID.
-- Partial success retries only remaining confirmed IDs.
+- Partial success retries only remaining IDs from that authorized set and
+  requires no new confirmation.
 - “Do not continue” prevents reading the next batch.
 - Unrelated Douyin requests do not invoke the Skill implicitly.
