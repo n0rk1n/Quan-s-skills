@@ -112,6 +112,9 @@ If a required Codex thread capability or dependency is missing and no local equi
    - If temporary file deletion fails or remains unverified, do not archive the Codex thread. Report the local paths that were kept.
 
 10. Report import and thread-archive status separately.
+   - Report the `MCP preflight status`: whether DEVONthink MCP confirmed Global Inbox discovery, daily-group find/create support, and file-import support.
+   - Report the exact daily group name and its `daily_archive_group_uuid`.
+   - Report the transcript and retrospective separately, including each import result and whether its imported record parent equals `daily_archive_group_uuid`.
    - Mention the DEVONthink destinations for both retrospective and transcript.
    - Mention whether the temporary local files were deleted or provide their paths.
    - Mention whether the Codex thread was archived or could not be archived because a required capability or completion-gate condition is unavailable.
