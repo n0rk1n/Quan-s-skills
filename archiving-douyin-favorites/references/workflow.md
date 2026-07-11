@@ -4,16 +4,15 @@
 
 1. Confirm the Skill was explicitly invoked, a signed-in browser is available, and the DEVONthink MCP server is usable. If DEVONthink MCP is missing or cannot operate, stop; do not offer or run a reduced local-only workflow.
 2. Use DEVONthink MCP tools to locate the Global Inbox database, then create a fresh invocation folder named exactly `YYYY-MM-DD Archived DouYin Favorites`, where `YYYY-MM-DD` is the current local date.
-3. Use a default batch size of 20 unless the user explicitly specifies another size. Observe only that bounded batch and record stable content IDs, canonical URLs, visible facts, and topic labels.
+3. Use a default batch size of 24 unless the user explicitly specifies another size. Observe only that bounded batch and record stable content IDs, canonical URLs, visible facts, and topic labels.
 4. Create or update one DEVONthink bookmark record per favorite in the dated Inbox folder before any destructive action.
 5. Verify bookmark count, ID count, canonical-URL count, unique URL count, record comments, tags, and one-to-one ID/URL mapping.
-6. Create a Markdown summary record in the same DEVONthink folder and verify it is present.
-7. If cleanup is requested, ask for action-time confirmation of the exact archived ID set and count.
-8. Select only the confirmed IDs, inspect Douyin's final confirmation dialog, and submit only if its displayed scope and count match the current submission ID set.
-9. Reload, wait for lazy loading, and verify every confirmed ID.
-10. Report DEVONthink destination, archived bookmark count, summary record, verified removals, and unresolved IDs. Stop if requested.
+6. If cleanup is requested, select only the verified archived IDs, inspect Douyin's final confirmation dialog, and submit only if its displayed scope and count match the current submission ID set.
+7. Reload, wait for lazy loading, and verify every archived ID submitted for cleanup.
+8. Create a Chinese Markdown summary record in the same DEVONthink folder and verify it is present.
+9. Report DEVONthink destination, archived bookmark count, summary record, verified removals, and unresolved IDs. Stop if requested.
 
-Never reorder these gates: `verify DEVONthink MCP → create fresh Inbox group → observe → create bookmarks → verify bookmarks → write summary → verify summary → confirm → select exact IDs → inspect dialog → unfavorite → delayed verify`.
+Never reorder these gates: `verify DEVONthink MCP → create fresh Inbox group → observe → create bookmarks → verify bookmarks → select exact archived IDs → inspect dialog → unfavorite → delayed verify → write Chinese summary → verify summary`.
 
 ## DEVONthink Setup
 
@@ -43,7 +42,7 @@ Do not write inside `.dtBase2`, `.dtSparse`, or `.dtArchive` packages. Do not us
 
 ## Collecting a Batch
 
-Use a batch size of 20 by default unless the user specifies another size; reduce it only when the page state cannot expose that many stable content IDs reliably. Record each card's stable content ID, content type (`video` or `note`), canonical URL, visible title/caption/author, visible facts, and 1-5 content tags grounded in the item. Do not identify a destructive target by card position, visible order, “first N,” or a broad page selection.
+Use a batch size of 24 by default unless the user specifies another size; reduce it only when the page state cannot expose that many stable content IDs reliably. Record each card's stable content ID, content type (`video` or `note`), canonical URL, visible title/caption/author, visible facts, and 1-5 content tags grounded in the item. Do not identify a destructive target by card position, visible order, “first N,” or a broad page selection.
 
 Do not bypass login, CAPTCHA, access controls, rate limits, or platform safeguards. Stop if the session or page state is not trustworthy. Do not pre-read another batch after the user asks to stop.
 
@@ -83,37 +82,43 @@ After creating or updating records, verify the dated folder contains one bookmar
 
 Label visible facts as facts. Clearly mark any synthesis, takeaway, interpretation, or inferred context as inference, and do not invent missing details. Add explicit caution rather than endorsement when recording medical, financial, benchmark, income, popularity, or product claims; visible engagement counts and creator assertions are not independent verification.
 
-Before confirmation or any destructive action, count bookmark records, archived IDs, canonical URLs, unique IDs, and unique canonical URLs. All counts must equal the batch size, and every ID and canonical URL must map one-to-one. Correct any mismatch before proceeding.
+Before any destructive action, count bookmark records, archived IDs, canonical URLs, unique IDs, and unique canonical URLs. All counts must equal the batch size, and every ID and canonical URL must map one-to-one. Correct any mismatch before proceeding.
 
 ## Summary Markdown Record
 
-After bookmark verification, use `mcp__devonthink.create_record` with `type: "markdown"` to create one Markdown record in the same DEVONthink folder. Use a name like:
+After bookmark verification and any requested cleanup attempt, use `mcp__devonthink.create_record` with `type: "markdown"` to create one Markdown record in the same DEVONthink folder. The summary file name and body must be written in Simplified Chinese by default. Preserve fixed identifiers such as DouYin, DEVONthink, UUIDs, canonical URLs, and tag strings exactly when needed. Keep content IDs for verification, record comments, unresolved notes, and exact cleanup matching, but do not expose them as a separate column in the archived-favorites list.
+
+Use a Chinese record name like:
 
 ```text
-YYYY-MM-DD DouYin Favorites Summary.md
+YYYY-MM-DD DouYin 收藏归档总结.md
 ```
 
-The summary record must include:
+The summary record must include these sections in Chinese:
 
 - destination folder name and DEVONthink database;
 - processing status and batch size;
 - evidence limitations, including what was and was not visible;
 - cross-item synthesis grouped by topic;
-- a table or list of all archived favorites with bookmark name, content ID, canonical URL, author, tags, and one-line summary;
+- a table or list of all archived favorites with bookmark name, canonical URL, author, tags, and one-line summary;
 - unresolved metadata or failed record operations, if any; and
 - cleanup status if unfavoriting was requested.
 
-Verify the summary record exists in the same destination group and that its content covers every archived bookmark before asking for destructive-action confirmation. At minimum, verify summary item count, content ID count, canonical URL count, unique canonical URL count, tag coverage, processing status, and unresolved/sparse metadata notes against the bookmark archive. A cross-item synthesis inside comments or chat is not a substitute for this Markdown record.
+All headings, synthesis, evidence-limit notes, processing status, table labels, one-line summaries, unresolved-metadata notes, and cleanup status must be Chinese. Do not write the summary in English merely because some source terms, tool names, URLs, or tags are English.
 
-## Action-Time Confirmation
+Do not include a `内容 ID` or `Content ID` column in the archived-favorites table/list. If an item has sparse metadata or later needs cleanup, mention its content ID only in verification, unresolved-metadata notes, record comments, or exact cleanup notes.
 
-After the DEVONthink bookmark archive and same-folder summary pass their checks, ask immediately before any destructive action. Name the exact content-ID set and its count, and state that only those archived items will be unfavorited. An initial request to archive or clean up is not action-time confirmation.
+Verify the summary record exists in the same destination group and that its content covers every archived bookmark before reporting completion. At minimum, verify summary item count, content ID count, canonical URL count, unique canonical URL count, tag coverage, Chinese-language summary text, processing status, cleanup status, and unresolved/sparse metadata notes against the bookmark archive. A cross-item synthesis inside comments or chat is not a substitute for this Markdown record.
 
-Any batch containing a new ID requires a new confirmation. Authorization covers retries only for a subset of the same confirmed IDs; it never expands to another ID. If the user declines or says not to continue, do not unfavorite anything.
+## Cleanup Gate
+
+After the DEVONthink bookmark archive passes its checks, cleanup may proceed for that batch without waiting for the same-folder summary. A bookmark is considered archived only when the DEVONthink record exists in the invocation folder, its URL matches the content ID, its comment carries the content ID and useful context, and its tags are present.
+
+Cleanup scope is the verified archived ID set from the current invocation. Do not ask for an extra confirmation solely because the cleanup step is destructive, but do stop if the user says not to continue. A later batch or newly observed ID requires its own bookmark archive and verification before it can be unfavorited.
 
 ## Exact-ID Unfavorite Procedure
 
-Set `confirmed_ids` to the archived IDs approved at action time. For the initial submit, set `submission_ids = confirmed_ids`. For each partial-success retry, set `submission_ids = remaining_ids`. Require `submission_ids` to be a subset of `confirmed_ids`; never add an ID outside the confirmed set.
+Set `archived_ids` to the IDs whose DEVONthink bookmark records passed verification in the current invocation. For the initial submit, set `submission_ids = archived_ids`. For each partial-success retry, set `submission_ids = remaining_ids`. Require `submission_ids` to be a subset of `archived_ids`; never add an ID outside the verified bookmark archive.
 
 Locate and select items by matching `submission_ids`, never by card index or position. Require the UI-selected ID set to equal `submission_ids` for that submit; stop on any extra or missing ID.
 
@@ -123,19 +128,19 @@ Submit only after both the selection and dialog gates match. If delayed verifica
 
 ## Delayed Verification and Partial Success
 
-After each submission, reload the favorites view and wait for lazy-loaded favorite cards before checking every confirmed ID. Use this exact retry model:
+After each submission, reload the favorites view and wait for lazy-loaded favorite cards before checking every archived ID submitted for cleanup. Use this exact retry model:
 
 ```text
-confirmed_ids = archived IDs approved by the user
+archived_ids = verified archived IDs from DEVONthink bookmarks
 submit exact IDs
 reload and wait for lazy-loaded favorite cards
-remaining_ids = confirmed_ids still present
+remaining_ids = archived_ids still present
 while remaining_ids is non-empty and progress is being made:
-    submit only remaining_ids under the same batch authorization
+    submit only remaining_ids from the same verified bookmark batch
     reload, wait, and recompute remaining_ids
 ```
 
-Track the remaining set after each attempt. If the same remaining set persists across three attempts, stop and report it. Never expand the authorization to new IDs. Report partial success with exact verified-absent IDs and exact remaining IDs; mark the batch complete only when delayed verification finds none of `confirmed_ids` present.
+Track the remaining set after each attempt. If the same remaining set persists across three attempts, stop and report it. Never expand cleanup to new IDs. Report partial success with exact verified-absent IDs and exact remaining IDs; mark the batch complete only when delayed verification finds none of `archived_ids` present.
 
 ## Stopping and Merging
 
@@ -148,12 +153,12 @@ Merge or summarize only completed DEVONthink bookmark batches whose processing s
 | Need | Required action |
 | --- | --- |
 | DEVONthink MCP unavailable | Stop; no local-only fallback. |
-| Default count omitted | Archive 20 favorites. |
+| Default count omitted | Archive 24 favorites. |
 | Destination | Fresh Global Inbox group `YYYY-MM-DD Archived DouYin Favorites`, scoped by returned group UUID. |
 | Per favorite | DEVONthink `bookmark` record with canonical URL, content-based name, comment, and tags. |
 | Finder Comment | DEVONthink record `comment`. |
-| Completion note | Markdown summary record in the same group. |
-| Cleanup | Only after verified bookmarks, verified summary, and exact-ID confirmation. |
+| Completion note | Chinese Markdown summary record in the same group. |
+| Cleanup | May proceed after verified DEVONthink bookmarks for the exact archived IDs; summary follows before final completion. |
 
 ## Common Mistakes
 
@@ -164,10 +169,12 @@ Merge or summarize only completed DEVONthink bookmark batches whose processing s
 - Forgetting the exact dated Global Inbox folder name: `YYYY-MM-DD Archived DouYin Favorites`.
 - Naming bookmarks by index or author only instead of main content.
 - Putting details in chat only instead of the record comment and same-folder summary.
+- Writing the same-folder summary in English instead of Chinese.
 - Unfavoriting first because cached data appears sufficient to rebuild the archive.
 - Selecting “the first N cards” instead of matching archived content IDs.
 - Counting bookmarks or unique URLs only after the destructive action.
-- Treating the original request as fresh action-time confirmation.
+- Waiting for the summary or an extra confirmation when the bookmark archive has already been written and verified.
+- Expanding cleanup to a newly observed ID that does not yet have a verified bookmark in the invocation folder.
 - Trusting a toast or immediate viewport without reload and lazy-loading delay.
 - Retrying all items, or adding newly observed IDs, after partial success.
 - Repeating an unfavorite action after delayed verification already shows the ID absent.

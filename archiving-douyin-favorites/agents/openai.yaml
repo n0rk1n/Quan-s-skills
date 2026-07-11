@@ -1,7 +1,7 @@
 interface:
   display_name: "归档抖音收藏"
   short_description: "整理抖音收藏到 DEVONthink 书签并保留总结"
-  default_prompt: "Use $archiving-douyin-favorites to archive 20 current Douyin favorites into DEVONthink Inbox bookmarks with comments, tags, and a same-folder summary. Stop if DEVONthink MCP is unavailable."
+  default_prompt: "Use $archiving-douyin-favorites to archive 24 current Douyin favorites into DEVONthink Inbox bookmarks with comments, tags, and a same-folder summary. Stop if DEVONthink MCP is unavailable."
 
 policy:
   allow_implicit_invocation: false

@@ -19,12 +19,12 @@ Before observing or acting on favorites, read [references/workflow.md](reference
 
 Preserve this order without exception:
 
-`verify DEVONthink MCP → create dated Inbox group → observe → archive bookmarks → verify bookmarks → write summary Markdown → verify summary → confirm → unfavorite exact IDs → delayed verify`
+`verify DEVONthink MCP → create dated Inbox group → observe → archive bookmarks → verify bookmarks → unfavorite exact archived IDs → delayed verify → write Chinese summary Markdown → verify summary`
 
-Each invocation archives 20 favorites by default unless the user explicitly names a different count. The DEVONthink destination is the Global Inbox folder named exactly `YYYY-MM-DD Archived DouYin Favorites`, using the current local date.
+Each invocation archives 24 favorites by default unless the user explicitly names a different count. The DEVONthink destination is the Global Inbox folder named exactly `YYYY-MM-DD Archived DouYin Favorites`, using the current local date.
 
-Deadline pressure, cached page state, or assumed reconstructability never permits unfavoriting before the DEVONthink bookmark archive and same-folder summary are written and verified. Treat archived content IDs, not card positions, visible order, or broad selection, as the only destructive-action target.
+Deadline pressure, cached page state, or assumed reconstructability never permits unfavoriting before a one-to-one DEVONthink bookmark archive for the batch is written and verified. The same-folder summary is still required for completion, but it is not a gate before cleanup. Treat archived content IDs, not card positions, visible order, or broad selection, as the only destructive-action target.
 
-Ask for action-time confirmation naming the exact ID set and count. Never extend that authorization to an ID not named in the confirmed batch. If delayed verification already shows a confirmed ID absent, do not submit another unfavorite action for it.
+Once the bookmark archive is verified, only unfavorite the exact archived ID set from that verified batch. Never extend cleanup to an ID outside the verified bookmark archive. If delayed verification already shows an archived ID absent, do not submit another unfavorite action for it.
 
 Stop immediately when the user says not to continue. Preserve completed archive work, report exact verified and unresolved IDs, and do not collect another batch unless the user explicitly invokes the Skill again.
