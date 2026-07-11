@@ -1,0 +1,7 @@
+interface:
+  display_name: "归档抖音收藏"
+  short_description: "整理抖音收藏、保留原链接并安全取消收藏"
+  default_prompt: "Use $archiving-douyin-favorites to archive my current Douyin favorites, preserve original links, and ask before unfavoriting."
+
+policy:
+  allow_implicit_invocation: false
