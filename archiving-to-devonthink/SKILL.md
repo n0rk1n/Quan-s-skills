@@ -13,16 +13,18 @@ Write the retrospective for the user's future self: natural, concrete, first-per
 
 ## Required Capabilities
 
-Before starting, confirm equivalent capabilities exist:
+Before starting, confirm these capabilities exist:
 
 - Codex thread tools for identifying, reading, and archiving threads, such as `read_thread`, `list_threads`, `set_thread_archived`, or equivalents.
-- DEVONthink tools for selecting a destination and importing files, such as `get_databases`, `import_file`, or equivalents.
+- DEVONthink MCP tools for discovering databases, finding or creating groups, and importing files.
 - A normal writable temporary filesystem path outside any `.dtBase2`, `.dtSparse`, or `.dtArchive` package.
 - Python 3 for the bundled transcript exporter at `scripts/conversation_exporter`.
 
+DEVONthink MCP is a hard requirement. Before generating either temporary Markdown file, confirm the MCP can discover the Global Inbox, find or create a group, and import files. If DEVONthink MCP is unavailable or any of those operations is unsupported, stop and name the missing capability. Do not offer or run a local-only, AppleScript, direct database-package, or skipped-import fallback, even if the user asks to preserve partial progress.
+
 In Codex Desktop, explicit thread tools may be unavailable even when local equivalents exist. Before declaring thread access missing or offering a reduced workflow, check for `CODEX_THREAD_ID`, `~/.codex/sessions/**/rollout-*-<thread-id>.jsonl`, `~/.codex/session_index.jsonl`, and `~/.codex/archived_sessions/`. These can satisfy identifying and reading the current thread. Treat them as equivalent capabilities when they exist and are readable; use narrow metadata/count checks first and do not dump raw transcript content into the response.
 
-If a required capability, MCP server, plugin, app integration, or dependency is missing and no equivalent exists, stop and name the missing item. Do not silently skip DEVONthink import or thread archiving unless the user explicitly chooses a reduced workflow.
+If a required Codex thread capability or dependency is missing and no local equivalent exists, stop and name the missing item. Do not silently skip thread archiving unless the user explicitly chooses a reduced workflow.
 
 ## Workflow
 
@@ -31,7 +33,13 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - If they refer to another thread, use thread tools to list or read it.
    - If unclear, ask one concise clarification question.
 
-2. Gather enough context and conversation evidence.
+2. Resolve the daily DEVONthink destination.
+   - Use the Global Inbox database (`is_inbox: true`). If it is unavailable, stop; do not fall back to another database or ask for another destination.
+   - Name the group exactly `YYYY-MM-DD Archived Codex Conversations`, using the current local date.
+   - Search the Global Inbox for that exact group name. Reuse its group UUID when found; create it only when absent.
+   - Treat the group as resolved only when DEVONthink MCP returns an identifiable group UUID. Use that UUID as `daily_archive_group_uuid` for the rest of the workflow.
+
+3. Gather enough context and conversation evidence.
    - For the current thread, start with visible conversation context.
    - Use thread/app tools when context is incomplete, aggressively summarized, or missing decisions, failures, lessons, commands, files, or outcomes.
    - Include older pages only when needed for a useful retrospective.
@@ -40,7 +48,7 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Identify repeated or difficult discussion loops: errors that appeared more than once, decisions revisited, assumptions corrected, blocked capabilities, approval or permission friction, and changes in direction.
    - Preserve concrete anchors for later recall: important commands, files, tool names, destination names, dates, links, and error text. Keep anchors concise; do not copy raw tool payloads or long reference documents just because they appeared in the thread.
 
-3. Generate the original transcript Markdown.
+4. Generate the original transcript Markdown.
    - Use the bundled exporter in this skill when local Codex JSONL or ChatGPT official export files are available.
    - From this skill directory, run Codex exports with:
 
@@ -58,7 +66,7 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Save transcript files in a normal temporary output directory, never inside source input directories or DEVONthink database packages.
    - The transcript should preserve the useful shape of user/assistant wording, but it is intentionally lightweight. Omit raw tool-call sections, tool arguments, tool outputs, full skill contents, and other long pasted reference blocks unless the user explicitly asks for a forensic transcript.
 
-4. Write the temporary Markdown retrospective note.
+5. Write the temporary Markdown retrospective note.
    - Save in a normal output location, never inside a DEVONthink database package.
    - Filename must follow the retrospective filename rule below.
    - Use Chinese section headings and no level-one heading (`# ...`).
@@ -69,18 +77,18 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Include a section for hard or repeated issues when the thread contained friction, retries, reversals, debugging loops, unclear requirements, missing tools, or permission boundaries.
    - Optimize for future review, not completeness: omit trivial turn-by-turn narration and keep the material that explains what was learned, decided, fixed, or still needs attention.
 
-5. Import both Markdown files into DEVONthink.
+6. Import both Markdown files into DEVONthink.
    - Use DEVONthink MCP tools only; never modify database package contents directly.
-   - Prefer the Global Inbox database when present (`is_inbox: true`).
-   - If no Global Inbox is available, use the current database's `incomingGroupUUID` or ask the user for a destination.
+   - Import both files with destination `daily_archive_group_uuid`; importing either file into the Global Inbox root or another group is not success.
    - Import with `mode: import`.
    - Treat import as confirmed only when the tool returns success plus an identifiable destination: database/group name, record UUID, item URL, or imported path.
    - Import the transcript and retrospective as separate records. Prefer importing the transcript first, then the retrospective with its `## 原文记录` section updated to reference the imported transcript.
    - If DEVONthink tools support tags or comments, tag/link the two records consistently; do not rely on tags as the only relationship.
 
-6. Validate before deletion.
+7. Validate before deletion.
    - DEVONthink reported success for both retrospective and transcript.
    - Both destinations are identifiable.
+   - Confirm both imported record parents equal `daily_archive_group_uuid` before deleting temporary files.
    - Imported retrospective item name matches the retrospective filename rule.
    - Imported transcript item name matches the transcript filename rule.
    - No file was written inside `.dtBase2`, `.dtSparse`, `.dtArchive`, or source input directories.
@@ -92,18 +100,18 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Transcript omits raw tool-call sections, `call_id`, tool arguments, tool outputs, and full skill/document dumps unless the user explicitly asked for a forensic transcript.
    - If the thread had repeated or difficult issues, retrospective note names them and explains the final resolution or remaining uncertainty.
 
-7. Delete the temporary local Markdown files.
+8. Delete the temporary local Markdown files.
    - Delete only files created for this workflow.
    - Delete only after both imports are confirmed with identifiable destinations.
    - If either import is ambiguous or deletion fails, keep/report the local paths.
 
-8. Archive the Codex thread after the completion gate.
-   - The Codex thread archive gate is: both DEVONthink imports are confirmed with identifiable destinations, the retrospective points to the transcript record when possible, and the temporary local Markdown files have been deleted.
+9. Archive the Codex thread after the completion gate.
+   - The Codex thread archive gate is: both DEVONthink imports are confirmed with identifiable destinations in the identified `daily_archive_group_uuid`, both imported record parents equal that group UUID, the retrospective points to the transcript record when possible, and the temporary local Markdown files have been deleted.
    - After the gate above passes, use `set_thread_archived` without asking for additional permission. This skill has standing authorization to archive the Codex thread only after successful DEVONthink import and verified cleanup.
    - If import fails, do not ask for archive confirmation and do not archive unless the user explicitly says to archive anyway.
    - If temporary file deletion fails or remains unverified, do not archive the Codex thread. Report the local paths that were kept.
 
-9. Report import and thread-archive status separately.
+10. Report import and thread-archive status separately.
    - Mention the DEVONthink destinations for both retrospective and transcript.
    - Mention whether the temporary local files were deleted or provide their paths.
    - Mention whether the Codex thread was archived or could not be archived because a required capability or completion-gate condition is unavailable.
@@ -239,6 +247,9 @@ Use the template as a guide, not a rigid form. Omit sections only when they add 
 | Mistake | Fix |
 | --- | --- |
 | Exact example tool name is unavailable | Use an equivalent capability; stop only when the capability is missing. |
+| DEVONthink MCP unavailable but another automation path exists | Stop; DEVONthink MCP has no fallback. |
+| Same-day archive group already exists | Reuse its UUID; do not create a duplicate group. |
+| One file imported into the Global Inbox root | Treat the workflow as incomplete; both files must be children of the daily group. |
 | Codex Desktop lacks `read_thread`/`list_threads` tools | Check `CODEX_THREAD_ID`, local rollout JSONL files, and `session_index.jsonl` before claiming the thread cannot be read. |
 | Writing inside a DEVONthink database package | Write temporary files elsewhere and import through DEVONthink tools. |
 | Naming file `YYYY-MM-DD-codex-archive-...md` or adding `HH:mm` | Use `YYYY-MM-DD <对话解决的问题>（Codex 归档）.md`. |
