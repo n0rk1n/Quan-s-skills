@@ -41,9 +41,9 @@ Any batch containing a new ID requires a new confirmation. Authorization covers 
 
 ## Exact-ID Unfavorite Procedure
 
-Set `confirmed_ids` to the archived IDs approved at action time. Locate and select items by matching those IDs, never by card index or position. Before submission, compare selected IDs with `confirmed_ids`; stop on any extra or missing ID.
+Set `confirmed_ids` to the archived IDs approved at action time. For the initial submit, set `submission_ids = confirmed_ids`. For each partial-success retry, set `submission_ids = remaining_ids`. Require `submission_ids` to be a subset of `confirmed_ids`; never add an ID outside the confirmed set.
 
-Submit only when the sets match. If delayed verification has already established that an ID is absent, treat it as verified removed and do not submit another action for it. Record the submitted ID set and the platform result without treating a success toast or changed visible count as final verification.
+Locate and select items by matching `submission_ids`, never by card index or position. Require the UI-selected ID set to equal `submission_ids` for that submit; stop on any extra or missing ID. Submit only when the sets match. If delayed verification has already established that an ID is absent, treat it as verified removed and do not submit another action for it. Record the submitted ID set and the platform result without treating a success toast or changed visible count as final verification.
 
 ## Delayed Verification and Partial Success
 
