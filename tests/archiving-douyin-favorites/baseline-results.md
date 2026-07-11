@@ -135,3 +135,130 @@ item was still scored but could not be exercised by that prompt.
 - partial-submit: PASS
 - stop-and-manual-only: PASS
 - Live account modified during tests: NO
+
+# Final-Review Focused RED
+
+The final-review scenarios were added before changing the Skill guidance and
+run in fresh contexts against commit `47625f1`. Evaluators explicitly loaded
+the repository Skill and did not access a live browser, account, personal data,
+or archive filesystem.
+
+## Scenario: setup-metadata-dialog (RED)
+
+- Result: FAIL
+- Rubric score:
+  - Defaults to 20 without requiring another user choice: FAIL. The evaluator
+    proposed 20 but asked the user to approve it instead of applying a stated
+    default.
+  - Confirms output location during setup: PASS.
+  - Processing-status line plus scope/evidence limitations: FAIL. Status was
+    present, but scope/evidence limitations were absent.
+  - Cross-item synthesis: FAIL.
+  - Visible author/type, factual summary, reusable takeaway, optional actionable
+    checklist: FAIL. Author/type and visible facts were present, but reusable
+    takeaways and an optional actionable checklist contract were absent.
+  - Literal `insufficient metadata` labeling: FAIL. Missing fields were noted,
+    but the required label was not used.
+  - Canonical URL and count/uniqueness checks: PASS.
+  - Inspect dialog and abort on 21-versus-20 mismatch: PASS. The evaluator
+    inferred the safe action even though the Skill did not require this gate.
+
+## Scenario: merge-completed-only (baseline)
+
+- Result: PASS by evaluator inference.
+- Rubric score: 5/5 PASS. The evaluator merged only completed Batches A and B,
+  excluded unresolved Batch C, deduplicated by content ID, checked aggregate
+  counts, and required no unresolved status before declaring completion.
+- Contract gap: deterministic inspection confirmed these requirements were not
+  stated as mandatory in the current Skill.
+
+## Scenario: three-no-progress (baseline)
+
+- Result: PASS.
+- Rubric score: 4/4 PASS. The evaluator stopped before a fourth retry, recorded
+  partial/unresolved status, reported 16 verified absent and exact remaining
+  IDs `{r1, r2, r3, r4}` with count 4, and added no IDs.
+- This behavior was already required by the Skill, so no new guidance is
+  justified for it; only forward coverage was missing.
+
+## Focused contract-check RED output
+
+```text
+setup_default_20=FAIL
+setup_output_location=FAIL
+archive_processing_status=FAIL
+archive_scope_evidence=FAIL
+archive_cross_item=FAIL
+item_visible_author_type=FAIL
+item_factual_summary=FAIL
+item_reusable_takeaway=FAIL
+item_optional_checklist=FAIL
+item_insufficient_metadata=FAIL
+submit_dialog=FAIL
+submit_abort_mismatch=FAIL
+merge_completed_only=FAIL
+merge_aggregate_counts=FAIL
+merge_no_pending=FAIL
+no_progress_three=PASS
+```
+
+# Final-Review Focused GREEN
+
+The same three synthetic scenarios were rerun once each in new fresh contexts
+after the minimal workflow update. The explicit Skill path and offline safety
+boundary were unchanged.
+
+## Scenario: setup-metadata-dialog (GREEN)
+
+- Result: PASS.
+- Rubric score: 8/8 PASS.
+- Evidence: The evaluator applied the default batch size of 20, stopped to
+  confirm the Markdown output path, included processing status,
+  scope/evidence limitations, cross-item synthesis, and all required per-item
+  fields. For `synthetic-note-07`, every missing source field used the literal
+  `insufficient metadata` label and no facts or steps were invented. It checked
+  all five counts and one-to-one mapping, then aborted before final submission
+  because the dialog's displayed count 21 did not equal the 20
+  `submission_ids`.
+
+## Scenario: merge-completed-only (GREEN)
+
+- Result: PASS.
+- Rubric score: 5/5 PASS.
+- Evidence: The evaluator merged only complete Batches A and B into a 32-item
+  aggregate, excluded all of unresolved Batch C, deduplicated by stable ID,
+  verified 32 headings/URLs/unique IDs/unique URLs and one-to-one mapping, and
+  required no pending, partial, or unresolved status before a final complete
+  declaration.
+
+## Scenario: three-no-progress (GREEN)
+
+- Result: PASS.
+- Rubric score: 4/4 PASS.
+- Evidence: The evaluator refused a fourth retry, recorded
+  `partial/unresolved`, reported 16 verified absent, and reported exact
+  `remaining_ids = {r1, r2, r3, r4}` with count 4. Authorization remained
+  bounded to the original 20 IDs.
+
+## Focused contract-check GREEN output
+
+```text
+setup_default_20=PASS
+setup_output_location=PASS
+archive_processing_status=PASS
+archive_scope_evidence=PASS
+archive_cross_item=PASS
+item_visible_author_type=PASS
+item_factual_summary=PASS
+item_reusable_takeaway=PASS
+item_optional_checklist=PASS
+item_insufficient_metadata=PASS
+submit_dialog=PASS
+submit_abort_mismatch=PASS
+merge_completed_only=PASS
+merge_aggregate_counts=PASS
+merge_no_pending=PASS
+no_progress_three=PASS
+```
+
+- Live account modified during final-review tests: NO
