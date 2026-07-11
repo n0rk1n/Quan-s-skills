@@ -7,7 +7,7 @@ description: Use when the user asks Codex to archive, tidy, summarize, preserve,
 
 ## Overview
 
-Turn a Codex thread into two Markdown archive records: a concise Chinese retrospective and a lightweight readable transcript. Import both into DEVONthink, delete temporary local files only after both imports are confirmed, then archive the Codex thread only after the DEVONthink records are identifiable and the temporary files have been deleted. Ask before that final thread archive unless the user already authorized it in the original request.
+Turn a Codex thread into two Markdown archive records: a concise Chinese retrospective and a lightweight readable transcript. Import both into DEVONthink, delete temporary local files only after both imports are confirmed, then archive the Codex thread only after the DEVONthink records are identifiable and the temporary files have been deleted. Once that gate passes, archive the Codex thread yourself without asking for a separate final confirmation.
 
 Write the retrospective for the user's future self: natural, concrete, first-person where appropriate, focused on what the conversation solved and why the path mattered. Preserve the transcript separately for evidence and search, but keep it compact: user/assistant wording matters more than raw skill dumps, tool arguments, or tool outputs. Never include private chain-of-thought.
 
@@ -97,18 +97,17 @@ If a required capability, MCP server, plugin, app integration, or dependency is 
    - Delete only after both imports are confirmed with identifiable destinations.
    - If either import is ambiguous or deletion fails, keep/report the local paths.
 
-8. Archive or ask before archiving the Codex thread.
+8. Archive the Codex thread after the completion gate.
    - The Codex thread archive gate is: both DEVONthink imports are confirmed with identifiable destinations, the retrospective points to the transcript record when possible, and the temporary local Markdown files have been deleted.
-   - If the original request explicitly authorized archiving the Codex thread after successful DEVONthink archiving, use `set_thread_archived` after the gate above passes.
-   - If the original request did not authorize final thread archiving, ask whether to archive the Codex thread now only after the gate above passes.
+   - After the gate above passes, use `set_thread_archived` without asking for additional permission. This skill has standing authorization to archive the Codex thread only after successful DEVONthink import and verified cleanup.
    - If import fails, do not ask for archive confirmation and do not archive unless the user explicitly says to archive anyway.
    - If temporary file deletion fails or remains unverified, do not archive the Codex thread. Report the local paths that were kept.
 
 9. Report import and thread-archive status separately.
    - Mention the DEVONthink destinations for both retrospective and transcript.
    - Mention whether the temporary local files were deleted or provide their paths.
-   - Mention whether the Codex thread was archived, is waiting for confirmation, or cannot be archived because a required capability is unavailable.
-   - A successful DEVONthink import with an unarchived thread is partial completion, not a failed archive note.
+   - Mention whether the Codex thread was archived or could not be archived because a required capability or completion-gate condition is unavailable.
+   - A successful DEVONthink import with an unarchived thread is partial completion, not a failed archive note, only when thread archiving is blocked by missing capability or an unmet completion gate.
 
 ## Filename Rules
 
@@ -252,6 +251,6 @@ Use the template as a guide, not a rigid form. Omit sections only when they add 
 | Omitting repeated friction because it feels messy | Summarize the repeated issue, why it mattered, and how it was resolved or left open. |
 | Inventing exact metrics when tools do not expose them | Use approximate language or say the metric was unavailable. |
 | Body text directly under a heading | Leave exactly one blank line after each section heading. |
-| Archiving the Codex thread before cleanup | Import both files, confirm identifiable DEVONthink records, delete temporary Markdown files, then archive only if pre-authorized or newly confirmed. |
+| Archiving the Codex thread before cleanup | Import both files, confirm identifiable DEVONthink records, delete temporary Markdown files, then archive automatically without a separate confirmation. |
 | Deleting after ambiguous import | Keep the local file until destination is identifiable. |
 | Treating unarchived thread as failed DEVONthink import | Report import status and Codex thread archive status separately. |
