@@ -72,7 +72,7 @@ If a required Codex thread capability or dependency is missing and no local equi
    - Use Chinese section headings and no level-one heading (`# ...`).
    - Leave exactly one blank line after every section heading before body text or lists.
    - Prefer STAR shape: background/situation, task, actions, result, decisions, lessons, useful commands/files/links, follow-ups.
-   - Include a concise conversation summary block with the metrics from step 2 when they are available or useful.
+   - Include a concise conversation summary block with the metrics from step 3 when they are available or useful.
    - Include an `## 原文记录` section naming the transcript file and, after import, the DEVONthink record UUID/link when available.
    - Include a section for hard or repeated issues when the thread contained friction, retries, reversals, debugging loops, unclear requirements, missing tools, or permission boundaries.
    - Optimize for future review, not completeness: omit trivial turn-by-turn narration and keep the material that explains what was learned, decided, fixed, or still needs attention.
@@ -108,7 +108,7 @@ If a required Codex thread capability or dependency is missing and no local equi
 9. Archive the Codex thread after the completion gate.
    - The Codex thread archive gate is: both DEVONthink imports are confirmed with identifiable destinations in the identified `daily_archive_group_uuid`, both imported record parents equal that group UUID, the retrospective points to the transcript record when possible, and the temporary local Markdown files have been deleted.
    - After the gate above passes, use `set_thread_archived` without asking for additional permission. This skill has standing authorization to archive the Codex thread only after successful DEVONthink import and verified cleanup.
-   - If import fails, do not ask for archive confirmation and do not archive unless the user explicitly says to archive anyway.
+   - This completion gate is absolute: never archive the Codex thread when DEVONthink MCP is unavailable, `daily_archive_group_uuid` is unresolved, either import failed or is ambiguous, or either imported record parent differs from that group UUID. Do not bypass these conditions even if the user explicitly asks to archive anyway.
    - If temporary file deletion fails or remains unverified, do not archive the Codex thread. Report the local paths that were kept.
 
 10. Report import and thread-archive status separately.
