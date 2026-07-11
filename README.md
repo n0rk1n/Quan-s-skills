@@ -5,7 +5,7 @@ Personal Codex skills collection.
 ## Skills
 
 - `archiving-to-devonthink`: archive a Codex or ChatGPT conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record.
-- `archiving-douyin-favorites`: archive explicitly selected Douyin favorites to verified Markdown before any confirmed exact-ID cleanup.
+- `archiving-douyin-favorites`: archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup.
 
 The archive skill includes a bundled transcript exporter under
 `archiving-to-devonthink/scripts/conversation_exporter`. It supports local
@@ -44,4 +44,5 @@ ln -s "/Users/oriki/Documents/Quan's skills/archiving-douyin-favorites" \
 ```
 
 Invoke it explicitly with `$archiving-douyin-favorites`. It does not trigger
-implicitly.
+implicitly. The Douyin favorites Skill requires DEVONthink MCP access; it stops
+instead of falling back to local Markdown when DEVONthink MCP is unavailable.
