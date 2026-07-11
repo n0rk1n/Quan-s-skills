@@ -23,6 +23,14 @@
 - 优先导入原文，再更新归档笔记中的原文引用并导入归档笔记。
 - 原有命名、内容、校验、临时文件清理及 Codex 对话归档门槛保持不变。
 
+## Codex 输入框名称
+
+- 参考同仓库 `archiving-douyin-favorites/agents/openai.yaml` 的做法，为本技能新增 `agents/openai.yaml`。
+- `interface.display_name` 使用中文名称 `归档 Codex 对话`，使 Codex 输入框和技能选择器显示中文。
+- `interface.short_description` 使用中文说明。
+- 底层 skill 标识 `archiving-to-devonthink` 保持不变，继续兼容 `$archiving-to-devonthink` 调用和现有脚本路径。
+- 默认提示必须写明 DEVONthink MCP 是硬性要求，并概括每日目录规则。
+
 ## 失败处理
 
 - 找不到 Global Inbox、无法确认或创建每日目录、无法识别目录 UUID，均视为未满足导入门槛。
@@ -35,4 +43,5 @@
 2. 目录英文固定为 `Archived Codex Conversations`。
 3. 同一天已有目录时复用，没有时创建。
 4. 两个生成文件都以每日目录为可识别目的地。
-5. 原有工作流中与这三项变更无关的内容保持不变。
+5. Codex 输入框中的显示名称为中文 `归档 Codex 对话`。
+6. 原有工作流中与这些变更无关的内容保持不变。
