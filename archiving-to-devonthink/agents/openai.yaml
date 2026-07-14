@@ -1,4 +1,4 @@
 interface:
   display_name: "归档 Codex 对话"
-  short_description: "整理 Codex 对话为可手动归档的 Markdown 记录"
-  default_prompt: "Use $archiving-to-devonthink to prepare Markdown records for this Codex conversation. Keep both files locally for my manual DEVONthink import; do not import, delete, or archive the thread automatically."
+  short_description: "整理 Codex 对话并导入 DEVONthink 每日目录"
+  default_prompt: "Use $archiving-to-devonthink to archive this Codex conversation into today's reusable DEVONthink Global Inbox folder. Import both records, delete only verified temporary files, and leave the Codex thread for me to archive manually."
