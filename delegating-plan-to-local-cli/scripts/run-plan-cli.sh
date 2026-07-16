@@ -7,7 +7,7 @@ usage() {
 Usage: run-plan-cli.sh --plan PLAN [--repo REPO] [--evidence-dir DIR] [--dry-run] -- CLI [ARG...]
 
 Example:
-  run-plan-cli.sh --repo /repo --plan /repo/docs/superpowers/plan.md -- reasonix run --max-steps 80
+  run-plan-cli.sh --repo /repo --plan /repo/docs/superpowers/plan.md -- claude -p --max-turns 80
 
 The CLI receives a task on stdin. Evidence defaults to a new directory under TMPDIR.
 EOF
@@ -101,7 +101,7 @@ You are implementing exactly one approved plan in a local Git repository.
 Repository: $repo
 Plan (read it before editing): $plan
 
-First inspect the plan and repository. Implement every plan step within scope. Do not commit, push, change credentials, access production, run destructive data operations, or make unrelated cleanup changes. If a step conflicts with the repository or cannot be completed, leave the code safe and record it as blocked rather than claiming completion.
+First inspect the plan and repository. Implement every plan step within scope. Do not read, transmit, print, or change credentials, secrets, private keys, .env values, production data, or paths outside this linked worktree. Do not commit, push, access production, run destructive data operations, or make unrelated cleanup changes. If a step conflicts with the repository or cannot be completed, leave the code safe and record it as blocked rather than claiming completion.
 
 Run the most relevant tests/build checks. Before exiting, print a report using this exact shape:
 
