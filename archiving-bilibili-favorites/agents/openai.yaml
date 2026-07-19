@@ -1,4 +1,4 @@
 interface:
-  display_name: "哔哩哔哩收藏归档"
+  display_name: "归档哔哩哔哩收藏"
   short_description: "Archive and safely unfavorite Bilibili batches."
   default_prompt: "Use $archiving-bilibili-favorites to archive and cancel my next 40 Bilibili favorites."
