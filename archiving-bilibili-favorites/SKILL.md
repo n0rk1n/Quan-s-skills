@@ -1,6 +1,6 @@
 ---
 name: archiving-bilibili-favorites
-description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink and, when requested, cancel exactly the verified archived favorites in a bounded batch of 40.
+description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink in one bounded batch of 40.
 ---
 
 # Archiving Bilibili Favorites
@@ -13,7 +13,8 @@ Archive exactly one bounded batch of 40 Bilibili favorites before changing the B
 
 - Run only after explicit `$archiving-bilibili-favorites` invocation.
 - Require a signed-in Bilibili browser session and working DEVONthink MCP. Do not bypass login, CAPTCHA, or platform safeguards.
-- Require the user to explicitly request cancellation before changing favorites. Archive-only requests stop after verification and summary.
+- The explicit invocation authorizes cancellation of exactly the 40 favorites that pass the DEVONthink one-to-one verification. Do not request a second confirmation.
+- If the archive verification does not pass, stop without changing Bilibili favorites; archive-only completion is not a supported outcome of this skill.
 - Read [references/workflow.md](references/workflow.md) completely before observing favorites or creating DEVONthink records.
 
 ## Non-Negotiable Invariant
