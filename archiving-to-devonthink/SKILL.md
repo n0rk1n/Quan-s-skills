@@ -7,33 +7,41 @@ description: Use when the user asks to tidy, summarize, preserve, or send a Code
 
 ## Overview
 
-Create two temporary Markdown records, import both into the DEVONthink Global Inbox daily group, verify them, then delete the temporary files. The user alone decides whether to archive the Codex thread.
+Import a concise transcript and retrospective into the DEVONthink Global Inbox daily group, verify and clean up, then close the source conversation as far as the host allows.
 
-**Never** archive a Codex thread automatically.
+**Complete everything the host supports:** agents archive conversations themselves when a tool exists; otherwise they ask the user to archive or delete manually.
 
 ## Prerequisites
 
-- Thread reading, a writable temporary path outside DEVONthink packages/source inputs, and Python 3 when using `scripts/conversation_exporter`.
-- DEVONthink MCP must discover Global Inbox, find/create a group, and import files. If unavailable, stop before generation: no local-only, AppleScript, or direct-package fallback.
+- Readable conversation, a safe writable temporary path, and Python 3 when using `scripts/conversation_exporter`.
+- DEVONthink MCP must discover Global Inbox, find/create a group, and import files. If unavailable, stop before generation; do not use AppleScript or direct-package fallbacks.
 
-If Desktop thread tools are absent, check `CODEX_THREAD_ID`, local rollout JSONL, `session_index.jsonl`, and `archived_sessions/`; stop if no readable equivalent exists.
+Without Desktop thread tools, check `CODEX_THREAD_ID`, rollout JSONL, `session_index.jsonl`, and `archived_sessions/`; stop if none is readable. Conversation archival is optional and never blocks DEVONthink import.
 
 ## Workflow
 
-1. Confirm the target thread; use the current thread for “this thread”, otherwise locate it. Ask only if unclear.
-2. Resolve `daily_archive_group_uuid`: in Global Inbox, find or create exactly `YYYY-MM-DD Archived Codex Conversations` for the local date. Reuse an existing UUID; stop if unresolved.
-3. Gather available metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; never include private chain-of-thought.
+1. Confirm the source conversation. Use the current one for “this thread”; otherwise locate it and retain its thread ID/host ID. Ask only if unclear. Detect archival support without archiving yet.
+2. In Global Inbox, find or create exactly `YYYY-MM-DD Archived Codex Conversations` for the local date; retain its UUID.
+3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought.
 4. Create a lightweight transcript in a normal temporary directory. Prefer:
 
    ```bash
    PYTHONPATH="$PWD/scripts" python3 -m conversation_exporter.cli codex --input <jsonl-or-directory> --thread <thread-id> --out <temporary-output-dir>
    ```
 
-   Use the `chatgpt` source mode for official ChatGPT exports; otherwise create an equivalent concise transcript manually.
-5. Write the retrospective beside it: Chinese headings, no level-one heading, one blank line after headings, useful context/actions/result/decisions/lessons, hard issues, anchors, `## 原文记录`, and follow-ups.
-6. Import transcript then retrospective using `mode: import` and destination `daily_archive_group_uuid`. Each must return an identifiable record whose parent equals that UUID. Before retrospective import, include the transcript record in `## 原文记录` when available.
-7. Only after step 6, validate names and the rules below; then delete only these two generated temporary Markdown files. Keep/report paths if either import or deletion is ambiguous. Do not archive the Codex thread.
-8. Report MCP preflight, group name/UUID, both record destinations, cleanup status, and that thread archival remains with the user.
+   Use `chatgpt` mode for official ChatGPT exports; otherwise create an equivalent manually.
+5. Write the retrospective beside it with Chinese headings, no level-one heading, one blank line after headings, context/actions/result/decisions/lessons, hard issues, anchors, `## 原文记录`, and follow-ups.
+6. Import transcript then retrospective using `mode: import` and the daily-group UUID. Verify both returned records have that parent. Link the transcript record from `## 原文记录` when available.
+7. Validate names and the rules below, then delete only the two generated files. If any import, parent check, or deletion is ambiguous, keep the files and source conversation active, report the incomplete step, and stop.
+8. Follow the closing table. Report MCP preflight, group name/UUID, record destinations, cleanup, host capability, and closing result.
+
+## Conversation Closing
+
+| Host capability | Required finish |
+| --- | --- |
+| Available, such as Codex | Call `set_thread_archived` (or equivalent) with archival enabled for the exact source. Omit `threadId` only for the calling conversation; otherwise pass its exact thread/host IDs. Never archive a different executor. |
+| Unavailable, such as Reasonix or Claude Code | After successful import and cleanup, tell the user to archive or delete the source conversation manually. Do not invent a fallback. |
+| Tool call fails | Report that DEVONthink succeeded but conversation archival failed, request manual archive/deletion, and do not claim full automatic completion. |
 
 ## File and Transcript Rules
 
@@ -47,7 +55,7 @@ If Desktop thread tools are absent, check `CODEX_THREAD_ID`, local rollout JSONL
 
 | Mistake | Fix |
 | --- | --- |
-| MCP/group unavailable | Stop before generation; no fallback. |
-| Either record is outside the daily group | Keep temporary files; fix/import again. |
-| Deleting before both parents match `daily_archive_group_uuid` | Wait for both verified imports. |
-| Archiving the Codex thread after cleanup | Leave it for the user. |
+| Host cannot archive conversations | Finish DEVONthink, then request manual cleanup. |
+| Supported conversation left to the user | Call the archival tool after verified import and cleanup. |
+| Wrong conversation targeted | Use the retained source thread/host IDs. |
+| Partial result followed by closing | Keep the conversation active until every check passes. |
