@@ -131,5 +131,24 @@ class ReadmePortabilityTests(unittest.TestCase):
         self.assertIn("optional OpenAI/Codex interface metadata", text)
 
 
+class ScenarioCoverageTests(unittest.TestCase):
+    def test_cross_host_matrix_covers_required_scenarios(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        scenarios = (
+            "codex-all-capabilities",
+            "opencode-all-capabilities",
+            "missing-browser-automation",
+            "missing-devonthink-mcp",
+            "missing-conversation-closing",
+            "insufficient-conversation-context",
+        )
+
+        for scenario in scenarios:
+            self.assertIn(f"## Scenario: {scenario}", text)
+
+        self.assertIn("Do not access a live browser", text)
+        self.assertIn("Do not modify a real account", text)
+
+
 if __name__ == "__main__":
     unittest.main()
