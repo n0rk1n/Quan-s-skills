@@ -189,23 +189,76 @@ SKILLS = (
 
 
 class SkillStructureTests(unittest.TestCase):
-    def test_frontmatter_names_match_directories(self) -> None:
+    def test_frontmatter_has_recognized_required_fields(self) -> None:
         for name in SKILLS:
             with self.subTest(skill=name):
-                text = read(f"{name}/SKILL.md")
-                match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
-                self.assertIsNotNone(match)
-                self.assertIn(f"name: {name}", match.group(1))
+                fields = parse_frontmatter(read(f"{name}/SKILL.md"))
+                self.assertEqual(name, fields.get("name"))
+                self.assertRegex(fields["name"], r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+                self.assertTrue(fields.get("description"))
+                self.assertLessEqual(len(fields["description"]), 1024)
+
+    def test_frontmatter_parser_rejects_malformed_lines(self) -> None:
+        malformed = "---\nname: valid-name\nnot yaml\ndescription: Use when testing\n---\n"
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(malformed)
+
+    def test_frontmatter_parser_rejects_duplicate_keys(self) -> None:
+        duplicate = "---\nname: first\nname: second\ndescription: Use when testing\n---\n"
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(duplicate)
+
+    def test_frontmatter_parser_rejects_unterminated_quoted_scalars(self) -> None:
+        unterminated = '---\nname: valid-name\ndescription: "Use when testing\n---\n'
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(unterminated)
 
     def test_relative_markdown_links_resolve_inside_each_skill(self) -> None:
         link_pattern = re.compile(r"\[[^]]+\]\(([^)]+)\)")
         for name in SKILLS:
-            skill_path = ROOT / name / "SKILL.md"
-            for target in link_pattern.findall(skill_path.read_text(encoding="utf-8")):
-                if "://" in target or target.startswith("#"):
-                    continue
-                with self.subTest(skill=name, target=target):
-                    self.assertTrue((skill_path.parent / target).resolve().is_file())
+            skill_root = (ROOT / name).resolve()
+            for markdown_path in skill_root.rglob("*.md"):
+                for target in link_pattern.findall(markdown_path.read_text(encoding="utf-8")):
+                    if "://" in target or target.startswith("#"):
+                        continue
+                    with self.subTest(skill=name, file=markdown_path.name, target=target):
+                        resolved = (markdown_path.parent / target).resolve()
+                        self.assertTrue(resolved.is_relative_to(skill_root))
+                        self.assertTrue(resolved.is_file())
+
+
+class FavoritesSafetyContractTests(unittest.TestCase):
+    def test_douyin_preserves_exact_id_and_delayed_verification_gates(self) -> None:
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertIn("one-to-one ID/URL mapping", workflow)
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("UI-selected ID set to equal `submission_ids`", workflow)
+        self.assertIn("confirmation dialog", workflow)
+        self.assertIn("reload the favorites view and wait for lazy-loaded", workflow)
+        self.assertIn("persists across three attempts", workflow)
+
+    def test_bilibili_preserves_exact_id_and_delayed_verification_gates(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("一一对应", workflow)
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("selected_ids = submission_ids", workflow)
+        self.assertIn("最终弹窗", workflow)
+        self.assertIn("重新加载收藏页", workflow)
+        self.assertIn("连续三次无进展", workflow)
+
+    def test_both_favorites_skills_fail_closed_without_required_capabilities(self) -> None:
+        for name in ("archiving-douyin-favorites", "archiving-bilibili-favorites"):
+            with self.subTest(skill=name):
+                skill = read(f"{name}/SKILL.md")
+                self.assertIn("Stop before observing favorites", skill)
+                self.assertIn("do not offer a reduced fallback", skill)
 
 
 class ReadmePortabilityTests(unittest.TestCase):
@@ -226,6 +279,12 @@ class ReadmePortabilityTests(unittest.TestCase):
         self.assertIn("DEVONthink MCP", text)
         self.assertIn("browser automation", text.lower())
         self.assertIn("optional OpenAI/Codex interface metadata", text)
+
+    def test_readme_requires_explicit_skill_selection_on_both_hosts(self) -> None:
+        text = read("README.md")
+
+        self.assertNotIn("triggers automatically", text)
+        self.assertIn("explicitly name or invoke the skill", text)
 
 
 class ScenarioCoverageTests(unittest.TestCase):
