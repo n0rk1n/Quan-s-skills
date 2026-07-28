@@ -2,6 +2,8 @@
 
 ## Workflow Checklist
 
+Map host tools by semantic capability, not by exact name. Names such as `mcp__devonthink.get_databases`, `mcp__devonthink.create_record`, and `mcp__devonthink.set_record_tags` are non-normative examples; use equivalent DEVONthink MCP operations exposed by the current host.
+
 1. Confirm the Skill was explicitly invoked, a signed-in browser is available, and the DEVONthink MCP server is usable. If DEVONthink MCP is missing or cannot operate, stop; do not offer or run a reduced local-only workflow.
 2. Use DEVONthink MCP tools to locate the Global Inbox database, then create a fresh invocation folder named exactly `YYYY-MM-DD Archived DouYin Favorites`, where `YYYY-MM-DD` is the current local date.
 3. Use a default batch size of 24 unless the user explicitly specifies another size. Observe only that bounded batch and record stable content IDs, canonical URLs, visible facts, and topic labels.

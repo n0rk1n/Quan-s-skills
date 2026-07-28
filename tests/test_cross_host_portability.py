@@ -37,5 +37,30 @@ class ConversationPortabilityTests(unittest.TestCase):
         self.assertNotIn("archive this Codex conversation", text)
 
 
+class DouyinPortabilityTests(unittest.TestCase):
+    def test_core_invocation_is_not_codex_syntax(self) -> None:
+        skill = read("archiving-douyin-favorites/SKILL.md")
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertNotIn("$archiving-douyin-favorites", skill)
+        self.assertNotIn("$archiving-douyin-favorites", workflow)
+        self.assertIn("explicitly names or invokes this skill", skill)
+
+    def test_required_capabilities_and_safe_stop_are_explicit(self) -> None:
+        skill = read("archiving-douyin-favorites/SKILL.md")
+
+        self.assertIn("authenticated browser automation", skill)
+        self.assertIn("DEVONthink MCP", skill)
+        self.assertIn("map", skill.lower())
+        self.assertIn("Stop before observing favorites", skill)
+
+    def test_tool_names_are_examples_not_requirements(self) -> None:
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertIn("semantic capability", workflow)
+        self.assertIn("non-normative examples", workflow)
+        self.assertIn("mcp__devonthink.create_record", workflow)
+
+
 if __name__ == "__main__":
     unittest.main()
