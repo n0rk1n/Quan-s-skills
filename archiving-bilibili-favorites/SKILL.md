@@ -1,6 +1,6 @@
 ---
 name: archiving-bilibili-favorites
-description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink in one bounded batch of 40.
+description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink exactly one bounded batch of 40.
 ---
 
 # Archiving Bilibili Favorites
@@ -11,8 +11,8 @@ Run this Skill only when the user explicitly names or invokes this skill through
 
 ## Required Capabilities
 
-- authenticated browser automation that can inspect and operate the signed-in Bilibili session, match stable BV IDs, inspect the confirmation dialog, reload, and perform delayed verification.
-- DEVONthink MCP operations that can discover Global Inbox and create, look up, update, and verify groups and records.
+- authenticated browser automation that can inspect and operate the signed-in Bilibili session, match BV IDs and canonical URLs, inspect the final dialog, reload, and verify removals.
+- DEVONthink MCP operations that can discover a writable Inbox and create, look up, update, tag, and verify groups and bookmark/Markdown records.
 
 Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if either required capability is unavailable; do not offer a reduced fallback.
 
