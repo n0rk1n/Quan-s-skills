@@ -1,6 +1,6 @@
 ---
 name: archiving-bilibili-favorites
-description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink exactly one bounded batch of 40.
+description: Use when explicitly invoked to archive a signed-in user's Bilibili favorites to DEVONthink in exactly one bounded batch of 40.
 ---
 
 # Archiving Bilibili Favorites

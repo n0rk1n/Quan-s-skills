@@ -47,8 +47,6 @@ rm -rf ~/.codex/skills/<name>
 cp -R Quan-s-skills/<name> ~/.codex/skills/
 ```
 
-The complete skill directory is copied (not only `SKILL.md`) so that references, workflows, and scripts remain available.
-
 ## Install for OpenCode
 
 Clone this repository as shown above, then copy a skill into OpenCode's skill discovery path:
@@ -59,6 +57,8 @@ cp -R Quan-s-skills/<name> ~/.config/opencode/skills/<name>
 ```
 
 OpenCode discovers the skill and loads it through its native `skill` tool. Users may explicitly name the skill in their request.
+
+The complete skill directory is copied (not only `SKILL.md`), so references and scripts remain available.
 
 ## Invoke a Skill
 
