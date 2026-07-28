@@ -65,26 +65,70 @@ class DouyinPortabilityTests(unittest.TestCase):
 class BilibiliPortabilityTests(unittest.TestCase):
     def test_core_invocation_is_not_codex_syntax(self) -> None:
         skill = read("archiving-bilibili-favorites/SKILL.md")
-        workflow = read("archiving-bilibili-favorites/references/workflow.md")
 
         self.assertNotIn("$archiving-bilibili-favorites", skill)
-        self.assertNotIn("$archiving-bilibili-favorites", workflow)
         self.assertIn("explicitly names or invokes this skill", skill)
 
-    def test_required_capabilities_and_safe_stop_are_explicit(self) -> None:
+    def test_required_capabilities_and_fixed_batch_are_explicit(self) -> None:
         skill = read("archiving-bilibili-favorites/SKILL.md")
 
         self.assertIn("authenticated browser automation", skill)
         self.assertIn("DEVONthink MCP", skill)
-        self.assertIn("map", skill.lower())
         self.assertIn("Stop before observing favorites", skill)
+        self.assertIn("exactly one bounded batch of 40", skill)
 
-    def test_tool_names_are_examples_not_requirements(self) -> None:
-        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+    def test_openai_prompt_does_not_define_core_invocation_syntax(self) -> None:
+        metadata = read("archiving-bilibili-favorites/agents/openai.yaml")
 
-        self.assertIn("semantic capability", workflow)
-        self.assertIn("non-normative examples", workflow)
-        self.assertIn("mcp__devonthink.create_record", workflow)
+        self.assertNotIn("$archiving-bilibili-favorites", metadata)
+        self.assertIn("Use the archiving-bilibili-favorites skill", metadata)
+
+
+SKILLS = (
+    "archiving-to-devonthink",
+    "archiving-douyin-favorites",
+    "archiving-bilibili-favorites",
+)
+
+
+class SkillStructureTests(unittest.TestCase):
+    def test_frontmatter_names_match_directories(self) -> None:
+        for name in SKILLS:
+            with self.subTest(skill=name):
+                text = read(f"{name}/SKILL.md")
+                match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
+                self.assertIsNotNone(match)
+                self.assertIn(f"name: {name}", match.group(1))
+
+    def test_relative_markdown_links_resolve_inside_each_skill(self) -> None:
+        link_pattern = re.compile(r"\[[^]]+\]\(([^)]+)\)")
+        for name in SKILLS:
+            skill_path = ROOT / name / "SKILL.md"
+            for target in link_pattern.findall(skill_path.read_text(encoding="utf-8")):
+                if "://" in target or target.startswith("#"):
+                    continue
+                with self.subTest(skill=name, target=target):
+                    self.assertTrue((skill_path.parent / target).resolve().is_file())
+
+
+class ReadmePortabilityTests(unittest.TestCase):
+    def test_readme_documents_both_hosts_and_all_skills(self) -> None:
+        text = read("README.md")
+
+        self.assertNotIn("Personal Codex skills collection", text)
+        self.assertIn("Codex", text)
+        self.assertIn("OpenCode", text)
+        self.assertIn("~/.codex/skills", text)
+        self.assertIn("~/.config/opencode/skills", text)
+        for name in SKILLS:
+            self.assertIn(f"`{name}`", text)
+
+    def test_readme_explains_capabilities_and_optional_metadata(self) -> None:
+        text = read("README.md")
+
+        self.assertIn("DEVONthink MCP", text)
+        self.assertIn("browser automation", text.lower())
+        self.assertIn("optional OpenAI/Codex interface metadata", text)
 
 
 if __name__ == "__main__":
