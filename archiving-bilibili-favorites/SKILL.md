@@ -16,6 +16,8 @@ Run this Skill only when the user explicitly names or invokes this skill through
 
 Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if either required capability is unavailable; do not offer a reduced fallback.
 
+Never attempt to bypass login, CAPTCHA, access controls, rate limits, or platform safeguards. If the signed-in session is unavailable or a challenge blocks access, stop and report the blocker.
+
 Before observing or acting on favorites, read [references/workflow.md](references/workflow.md) completely and follow every checklist item.
 
 ## Safety Invariant

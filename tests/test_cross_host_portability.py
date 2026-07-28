@@ -145,6 +145,31 @@ class BilibiliPortabilityTests(unittest.TestCase):
         self.assertNotIn("$archiving-bilibili-favorites", metadata)
         self.assertIn("Use the archiving-bilibili-favorites skill", metadata)
 
+    def test_platform_safeguards_are_explicit(self) -> None:
+        skill = read("archiving-bilibili-favorites/SKILL.md")
+
+        self.assertIn("Never attempt to bypass login", skill)
+        self.assertIn("CAPTCHA", skill)
+        self.assertIn("access controls", skill)
+        self.assertIn("rate limits", skill)
+        self.assertIn("platform safeguards", skill)
+
+    def test_partial_retry_uses_current_submission_set_at_every_gate(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("selected_ids = submission_ids", workflow)
+        self.assertIn("dialog count must equal the size of `submission_ids`", workflow)
+        self.assertNotIn("显示数量为 40", workflow)
+
+    def test_summary_failure_is_reported_as_partial_completion(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("summary creation or verification fails", workflow)
+        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("do not claim full completion", workflow)
+
 
 SKILLS = (
     "archiving-to-devonthink",
