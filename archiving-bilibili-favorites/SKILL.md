@@ -5,24 +5,29 @@ description: Use when explicitly invoked to archive a signed-in user's Bilibili 
 
 # Archiving Bilibili Favorites
 
-## Overview
+## Manual-Only Operation
 
-Archive exactly one bounded batch of 40 Bilibili favorites before changing the Bilibili account. Treat the canonical video URL/BV ID as the sole cleanup identity, never card order or a broad selection.
+Run this Skill only when the user explicitly names or invokes this skill through the current host. Do not require a particular invocation syntax.
 
-## Preconditions
+## Required Capabilities
 
-- Run only after explicit `$archiving-bilibili-favorites` invocation.
-- Require a signed-in Bilibili browser session and working DEVONthink MCP. Do not bypass login, CAPTCHA, or platform safeguards.
-- The explicit invocation authorizes cancellation of exactly the 40 favorites that pass the DEVONthink one-to-one verification. Do not request a second confirmation.
-- If the archive verification does not pass, stop without changing Bilibili favorites; archive-only completion is not a supported outcome of this skill.
-- Read [references/workflow.md](references/workflow.md) completely before observing favorites or creating DEVONthink records.
+- authenticated browser automation that can inspect and operate the signed-in Bilibili session, match stable BV IDs, inspect the confirmation dialog, reload, and perform delayed verification.
+- DEVONthink MCP operations that can discover Global Inbox and create, look up, update, and verify groups and records.
 
-## Non-Negotiable Invariant
+Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if either required capability is unavailable; do not offer a reduced fallback.
 
-`verify DEVONthink → create fresh group → observe exactly 40 → create bookmarks → verify one-to-one mapping → select exact BV IDs → verify confirmation dialog → cancel → reload and verify → write Chinese summary`
+Before observing or acting on favorites, read [references/workflow.md](references/workflow.md) completely and follow every checklist item.
 
-Do not archive another batch in the same invocation. If fewer than 40 stable video identities are available, stop and report the shortfall; do not expand scope or use unstable cards.
+## Safety Invariant
 
-## Completion
+Preserve this order without exception:
 
-Report the DEVONthink folder, 40 bookmark count, summary record, verified removed IDs/URLs, and unresolved IDs. Record cover URLs in comments when visible; do not claim a cover was set as a DEVONthink thumbnail unless the available API actually supports writing it.
+`verify DEVONthink MCP → create fresh Inbox group → observe exactly 40 → create bookmarks → verify one-to-one mapping → select exact BV IDs → verify confirmation dialog → cancel → reload and verify → write Chinese summary`
+
+Each invocation archives 40 favorites. The DEVONthink destination is the Global Inbox folder named exactly `YYYY-MM-DD Archived Bilibili Favorites Batch NN`, using the current local date, where NN is the next available sequential batch number.
+
+Deadline pressure, cached page state, or assumed reconstructability never permits canceling before a one-to-one DEVONthink bookmark archive for the batch is written and verified. The same-folder summary is still required for completion, but it is not a gate before cleanup. Treat archived BV IDs, not card positions or visible order, as the only destructive-action target.
+
+Once the bookmark archive is verified, only cancel the exact BV IDs from that verified batch. Never extend cleanup to an ID outside the verified bookmark archive. If delayed verification already shows an archived BV ID absent, do not submit another unfavorite action for it.
+
+Stop immediately when the user says not to continue. Preserve completed archive work, report exact verified and unresolved IDs, and do not collect another batch unless the user explicitly invokes the Skill again.

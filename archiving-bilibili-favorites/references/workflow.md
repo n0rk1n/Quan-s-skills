@@ -1,5 +1,9 @@
 # Bilibili 收藏归档与取消收藏流程
 
+## Workflow Checklist
+
+Map host tools by semantic capability, not by exact name. Names such as `mcp__devonthink.get_databases`, `mcp__devonthink.create_record`, and `mcp__devonthink.lookup_records` are non-normative examples; use equivalent DEVONthink MCP operations exposed by the current host.
+
 ## 必经检查
 
 1. 确认技能被显式调用、浏览器已登录 Bilibili、DEVONthink MCP 可列出可写 Inbox 数据库。任一项失败即停止；不得使用本地文件、AppleScript 或数据库包作为替代。
