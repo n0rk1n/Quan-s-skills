@@ -1,6 +1,6 @@
 ---
 name: archiving-to-devonthink
-description: Use when the user asks to tidy, summarize, preserve, or send an AI conversation/session to DEVONthink, especially with phrases like 整理归档, 归档到 DEVONthink, 收件箱, 经验总结, 避坑点, lessons learned, retrospective, or archive note. Compatible with Codex, OpenCode, and other agent hosts that provide the required capabilities.
+description: Use when the user explicitly names or invokes archiving-to-devonthink to tidy, summarize, preserve, or send an AI conversation/session to DEVONthink in Codex, OpenCode, or another capable host.
 ---
 
 # Archiving to DEVONthink
@@ -11,12 +11,18 @@ Import a concise transcript and retrospective into the DEVONthink Global Inbox d
 
 **Complete everything the host supports:** agents archive conversations themselves when a tool exists; otherwise they ask the user to archive or delete manually.
 
+## Explicit Selection
+
+Run this Skill only when the user explicitly names or invokes this skill through the current host. Do not require a particular invocation syntax or infer selection from a merely related request.
+
 ## Required Capabilities
 
 - Readable current conversation context, or an explicitly selected supported export source.
 - DEVONthink MCP operations that can discover Global Inbox, find or create a group, import files, and verify record parents.
 - A safe writable temporary directory.
 - Optional: a conversation close or archive capability that can target the exact source conversation.
+
+Map the current host's tools to these semantic capabilities before reading an external export source or creating output. If readable source content, DEVONthink MCP, or a safe temporary directory is unavailable, report the missing capability. Stop before generating temporary files. Do not use AppleScript, direct DEVONthink package access, local-only output, or another non-MCP fallback.
 
 ## Source Selection
 
@@ -29,7 +35,12 @@ Without readable host context or a selected optional adapter that can produce a 
 1. Confirm the source conversation. Use the current one for "this conversation"; otherwise locate it and retain its source/host ID. Ask only if unclear. Detect archival support without archiving yet.
 2. In Global Inbox, find or create exactly `YYYY-MM-DD Archived AI Conversations` for the local date; retain its UUID. Historical `Archived Codex Conversations` groups are not discovered, reused, renamed, migrated, or merged.
 3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought.
-4. Create a lightweight transcript in a safe temporary directory from the current host context. Optional source adapters (Codex JSONL via `conversation_exporter.cli codex`, official ChatGPT exports via `conversation_exporter.cli chatgpt`) may be used when the host context is insufficient and an export source is explicitly available.
+4. Create a lightweight transcript in a safe temporary directory from the current host context. Optional source adapters may be used only when the host context is insufficient and an export source is explicitly available. Set `SKILL_DIR` to this installed skill directory, then use the applicable command:
+
+   ```bash
+   PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli codex --input <jsonl-or-directory> --thread <thread-id> --out <temporary-output-dir>
+   PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli chatgpt --input <conversations-json-or-zip> --out <temporary-output-dir>
+   ```
 5. Write the retrospective beside it with Chinese headings, no level-one heading, one blank line after headings, context/actions/result/decisions/lessons, hard issues, anchors, `## 原文记录`, and follow-ups.
 6. Import transcript then retrospective using `mode: import` and the daily-group UUID. Verify both returned records have that parent. Link the transcript record from `## 原文记录` when available.
 7. Validate names and the rules below, then delete only the two generated files. If any import, parent check, or deletion is ambiguous, keep the files and source conversation active, report the incomplete step, and stop.

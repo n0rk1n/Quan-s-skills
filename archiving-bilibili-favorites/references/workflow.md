@@ -27,17 +27,19 @@ Map host tools by semantic capability, not by exact name. Names such as `mcp__de
 
 显式调用本技能即授权取消收藏；归档闸门完整通过后，直接处理同一批 40 个 `archived_ids`，不得再次要求用户确认。归档闸门未通过、稳定 ID 少于 40 个或映射不一致时，必须停止，绝不取消收藏。
 
-1. `archived_ids` 必须等于已通过归档验证的 40 个 BV ID。
-2. 仅按 BV ID/视频 URL 定位卡片并勾选。读取已选 ID 集；它必须与 `archived_ids` 完全相等，不能多也不能少。
-3. 点击“取消收藏”后，检查最终弹窗：动作是取消收藏，显示数量为 40，且无额外范围或异常提示。任何不匹配都取消操作并报告。
-4. 提交后重新加载收藏页，等待懒加载，检查 40 个 `archived_ids` 都不再出现。成功提示或数字变化不构成最终验证。
-5. 若部分仍在，最多只对同一已验证 ID 集中的剩余项重试；三次无进展即停止。不得带入新卡片或下一批。
+1. `archived_ids` 必须等于已通过归档验证的 40 个 BV ID。首次提交设置 `submission_ids = archived_ids`；部分成功后的重试设置 `submission_ids = remaining_ids`。每次都要求 `submission_ids` 是 `archived_ids` 的子集，绝不加入未归档 ID。
+2. 仅按 BV ID/视频 URL 定位卡片并勾选。读取已选 ID 集并要求 `selected_ids = submission_ids`，不能多也不能少。
+3. 点击“取消收藏”后检查最终弹窗：动作必须是取消收藏，dialog count must equal the size of `submission_ids`，且无额外范围或异常提示。任何不匹配都取消操作并报告。
+4. 提交后重新加载收藏页，等待懒加载，并重新计算 `remaining_ids = archived_ids` 中仍出现的 ID。成功提示或数字变化不构成最终验证；已经核验消失的 ID 不得再次提交。
+5. 若 `remaining_ids` 非空，最多只对同一已验证归档集中的剩余项重试；同一剩余集连续三次无进展即停止。不得带入新卡片或下一批。
 
 将已验证移除的 bookmark 状态改为 `已归档；已取消收藏（页面重新加载后核验）`；未移除项标明 `partial/unresolved`。
 
 ## 总结与交付
 
 在相同分组创建一份简体中文 Markdown 总结，包含：目标位置、处理数量、可见证据与限制、40 条标题及 URL、取消收藏结果、未解决项，以及缩略图能力限制。验证总结位于同一分组、覆盖全部 40 条 URL，并且状态与 bookmark 一致后再报告完成。
+
+If summary creation or verification fails, preserve verified bookmarks and cleanup state, report partial completion, and do not claim full completion.
 
 ## 常见错误
 

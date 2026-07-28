@@ -62,8 +62,8 @@ The complete skill directory is copied (not only `SKILL.md`), so references and 
 
 ## Invoke a Skill
 
-- **Codex:** The skill triggers automatically when the request matches its description. The optional `agents/openai.yaml` metadata can tune invocation behavior.
-- **OpenCode:** Load the skill with the `skill` tool; then explicitly name or invoke the skill in your prompt. Favorites skills only run when explicitly invoked.
+- **Codex:** Explicitly name or invoke the skill in your request. The optional `agents/openai.yaml` metadata helps present the skill but does not replace explicit selection.
+- **OpenCode:** Load the skill with the `skill` tool, then explicitly name or invoke the skill in your request.
 
 ## Optional Host Metadata
 

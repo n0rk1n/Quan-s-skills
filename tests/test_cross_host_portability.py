@@ -12,6 +12,46 @@ def read(relative_path: str) -> str:
     return (ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def parse_frontmatter(text: str) -> dict[str, str]:
+    match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
+    if match is None:
+        raise ValueError("missing YAML frontmatter")
+
+    fields: dict[str, str] = {}
+    recognized_fields = {"name", "description", "license", "compatibility"}
+    for line in match.group(1).splitlines():
+        if line != line.lstrip():
+            raise ValueError(f"nested frontmatter is unsupported: {line}")
+        if ":" not in line:
+            raise ValueError(f"malformed frontmatter line: {line}")
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        if not re.fullmatch(r"[a-z][a-z0-9_-]*", key):
+            raise ValueError(f"invalid frontmatter key: {key}")
+        if key not in recognized_fields:
+            raise ValueError(f"unrecognized frontmatter key: {key}")
+        if key in fields:
+            raise ValueError(f"duplicate frontmatter key: {key}")
+        if not value:
+            raise ValueError(f"empty frontmatter value: {key}")
+        if value[0] in "'\"[{|>&*!%@`":
+            raise ValueError(f"only plain scalar frontmatter is supported: {key}")
+        fields[key] = value
+    return fields
+
+
+def scenario(text: str, name: str) -> str:
+    match = re.search(
+        rf"^## Scenario: {re.escape(name)}\n(.*?)(?=^---$|^## Scenario:|\Z)",
+        text,
+        re.DOTALL | re.MULTILINE,
+    )
+    if match is None:
+        return ""
+    return match.group(1)
+
+
 class ConversationPortabilityTests(unittest.TestCase):
     def test_conversation_skill_uses_host_neutral_source_and_names(self) -> None:
         text = read("archiving-to-devonthink/SKILL.md")
@@ -35,6 +75,28 @@ class ConversationPortabilityTests(unittest.TestCase):
 
         self.assertIn("AI 对话", text)
         self.assertNotIn("archive this Codex conversation", text)
+
+    def test_preflight_stops_before_generation_without_devonthink_mcp(self) -> None:
+        text = read("archiving-to-devonthink/SKILL.md")
+        fields = parse_frontmatter(text)
+
+        self.assertIn("explicitly names or invokes", fields["description"])
+        self.assertIn("explicitly names or invokes this skill", text)
+        self.assertIn("Stop before generating temporary files", text)
+        self.assertIn("AppleScript", text)
+        self.assertIn("direct DEVONthink package", text)
+
+    def test_optional_export_adapters_have_executable_commands(self) -> None:
+        text = read("archiving-to-devonthink/SKILL.md")
+
+        self.assertIn(
+            'PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli codex',
+            text,
+        )
+        self.assertIn(
+            'PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli chatgpt',
+            text,
+        )
 
 
 class DouyinPortabilityTests(unittest.TestCase):
@@ -60,6 +122,16 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertIn("semantic capability", workflow)
         self.assertIn("non-normative examples", workflow)
         self.assertIn("mcp__devonthink.create_record", workflow)
+        self.assertNotIn("use `mcp__devonthink.create_record`", workflow.lower())
+        self.assertNotIn("do not use `create_group_path`", workflow.lower())
+        self.assertNotIn("use `lookup_records`", workflow.lower())
+
+    def test_summary_failure_is_reported_as_partial_completion(self) -> None:
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertIn("summary creation or verification fails", workflow)
+        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("do not claim full completion", workflow)
 
 
 class BilibiliPortabilityTests(unittest.TestCase):
@@ -83,6 +155,31 @@ class BilibiliPortabilityTests(unittest.TestCase):
         self.assertNotIn("$archiving-bilibili-favorites", metadata)
         self.assertIn("Use the archiving-bilibili-favorites skill", metadata)
 
+    def test_platform_safeguards_are_explicit(self) -> None:
+        skill = read("archiving-bilibili-favorites/SKILL.md")
+
+        self.assertIn("Never attempt to bypass login", skill)
+        self.assertIn("CAPTCHA", skill)
+        self.assertIn("access controls", skill)
+        self.assertIn("rate limits", skill)
+        self.assertIn("platform safeguards", skill)
+
+    def test_partial_retry_uses_current_submission_set_at_every_gate(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("selected_ids = submission_ids", workflow)
+        self.assertIn("dialog count must equal the size of `submission_ids`", workflow)
+        self.assertNotIn("显示数量为 40", workflow)
+
+    def test_summary_failure_is_reported_as_partial_completion(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("summary creation or verification fails", workflow)
+        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("do not claim full completion", workflow)
+
 
 SKILLS = (
     "archiving-to-devonthink",
@@ -92,23 +189,76 @@ SKILLS = (
 
 
 class SkillStructureTests(unittest.TestCase):
-    def test_frontmatter_names_match_directories(self) -> None:
+    def test_frontmatter_has_recognized_required_fields(self) -> None:
         for name in SKILLS:
             with self.subTest(skill=name):
-                text = read(f"{name}/SKILL.md")
-                match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
-                self.assertIsNotNone(match)
-                self.assertIn(f"name: {name}", match.group(1))
+                fields = parse_frontmatter(read(f"{name}/SKILL.md"))
+                self.assertEqual(name, fields.get("name"))
+                self.assertRegex(fields["name"], r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+                self.assertTrue(fields.get("description"))
+                self.assertLessEqual(len(fields["description"]), 1024)
+
+    def test_frontmatter_parser_rejects_malformed_lines(self) -> None:
+        malformed = "---\nname: valid-name\nnot yaml\ndescription: Use when testing\n---\n"
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(malformed)
+
+    def test_frontmatter_parser_rejects_duplicate_keys(self) -> None:
+        duplicate = "---\nname: first\nname: second\ndescription: Use when testing\n---\n"
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(duplicate)
+
+    def test_frontmatter_parser_rejects_unterminated_quoted_scalars(self) -> None:
+        unterminated = '---\nname: valid-name\ndescription: "Use when testing\n---\n'
+
+        with self.assertRaises(ValueError):
+            parse_frontmatter(unterminated)
 
     def test_relative_markdown_links_resolve_inside_each_skill(self) -> None:
         link_pattern = re.compile(r"\[[^]]+\]\(([^)]+)\)")
         for name in SKILLS:
-            skill_path = ROOT / name / "SKILL.md"
-            for target in link_pattern.findall(skill_path.read_text(encoding="utf-8")):
-                if "://" in target or target.startswith("#"):
-                    continue
-                with self.subTest(skill=name, target=target):
-                    self.assertTrue((skill_path.parent / target).resolve().is_file())
+            skill_root = (ROOT / name).resolve()
+            for markdown_path in skill_root.rglob("*.md"):
+                for target in link_pattern.findall(markdown_path.read_text(encoding="utf-8")):
+                    if "://" in target or target.startswith("#"):
+                        continue
+                    with self.subTest(skill=name, file=markdown_path.name, target=target):
+                        resolved = (markdown_path.parent / target).resolve()
+                        self.assertTrue(resolved.is_relative_to(skill_root))
+                        self.assertTrue(resolved.is_file())
+
+
+class FavoritesSafetyContractTests(unittest.TestCase):
+    def test_douyin_preserves_exact_id_and_delayed_verification_gates(self) -> None:
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertIn("one-to-one ID/URL mapping", workflow)
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("UI-selected ID set to equal `submission_ids`", workflow)
+        self.assertIn("confirmation dialog", workflow)
+        self.assertIn("reload the favorites view and wait for lazy-loaded", workflow)
+        self.assertIn("persists across three attempts", workflow)
+
+    def test_bilibili_preserves_exact_id_and_delayed_verification_gates(self) -> None:
+        workflow = read("archiving-bilibili-favorites/references/workflow.md")
+
+        self.assertIn("一一对应", workflow)
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("selected_ids = submission_ids", workflow)
+        self.assertIn("最终弹窗", workflow)
+        self.assertIn("重新加载收藏页", workflow)
+        self.assertIn("连续三次无进展", workflow)
+
+    def test_both_favorites_skills_fail_closed_without_required_capabilities(self) -> None:
+        for name in ("archiving-douyin-favorites", "archiving-bilibili-favorites"):
+            with self.subTest(skill=name):
+                skill = read(f"{name}/SKILL.md")
+                self.assertIn("Stop before observing favorites", skill)
+                self.assertIn("do not offer a reduced fallback", skill)
 
 
 class ReadmePortabilityTests(unittest.TestCase):
@@ -130,6 +280,12 @@ class ReadmePortabilityTests(unittest.TestCase):
         self.assertIn("browser automation", text.lower())
         self.assertIn("optional OpenAI/Codex interface metadata", text)
 
+    def test_readme_requires_explicit_skill_selection_on_both_hosts(self) -> None:
+        text = read("README.md")
+
+        self.assertNotIn("triggers automatically", text)
+        self.assertIn("explicitly name or invoke the skill", text)
+
 
 class ScenarioCoverageTests(unittest.TestCase):
     def test_cross_host_matrix_covers_required_scenarios(self) -> None:
@@ -141,6 +297,11 @@ class ScenarioCoverageTests(unittest.TestCase):
             "missing-devonthink-mcp",
             "missing-conversation-closing",
             "insufficient-conversation-context",
+            "conversation-missing-devonthink-mcp",
+            "conversation-missing-temporary-directory",
+            "bilibili-partial-retry",
+            "semantic-mcp-tool-names",
+            "summary-write-failure",
         )
 
         for scenario in scenarios:
@@ -148,6 +309,40 @@ class ScenarioCoverageTests(unittest.TestCase):
 
         self.assertIn("Do not access a live browser", text)
         self.assertIn("Do not modify a real account", text)
+
+    def test_conversation_scenarios_supply_required_capabilities(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        codex = scenario(text, "codex-all-capabilities")
+        opencode = scenario(text, "opencode-all-capabilities")
+
+        self.assertIn("readable current conversation context", codex)
+        self.assertIn("safe writable temporary directory", codex)
+        self.assertIn("current context before any optional source adapter", codex)
+        self.assertIn("readable current conversation context", opencode)
+        self.assertIn("safe writable temporary directory", opencode)
+        self.assertNotIn("browser automation", opencode)
+
+    def test_favorites_failure_scenarios_explicitly_select_the_skill(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+
+        for name in (
+            "missing-browser-automation",
+            "missing-devonthink-mcp",
+            "summary-write-failure",
+        ):
+            with self.subTest(scenario=name):
+                self.assertIn("explicitly names", scenario(text, name))
+
+    def test_conversation_failure_scenarios_isolate_the_target_capability(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        missing_closing = scenario(text, "missing-conversation-closing")
+        insufficient_context = scenario(text, "insufficient-conversation-context")
+
+        self.assertIn("explicitly names `archiving-to-devonthink`", missing_closing)
+        self.assertIn("safe writable temporary directory", missing_closing)
+        self.assertIn("explicitly names `archiving-to-devonthink`", insufficient_context)
+        self.assertIn("configured DEVONthink MCP", insufficient_context)
+        self.assertIn("safe writable temporary directory", insufficient_context)
 
 
 if __name__ == "__main__":
