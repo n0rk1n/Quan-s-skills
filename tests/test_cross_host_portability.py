@@ -297,6 +297,11 @@ class ScenarioCoverageTests(unittest.TestCase):
             "missing-devonthink-mcp",
             "missing-conversation-closing",
             "insufficient-conversation-context",
+            "conversation-missing-devonthink-mcp",
+            "conversation-missing-temporary-directory",
+            "bilibili-partial-retry",
+            "semantic-mcp-tool-names",
+            "summary-write-failure",
         )
 
         for scenario in scenarios:
@@ -304,6 +309,40 @@ class ScenarioCoverageTests(unittest.TestCase):
 
         self.assertIn("Do not access a live browser", text)
         self.assertIn("Do not modify a real account", text)
+
+    def test_conversation_scenarios_supply_required_capabilities(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        codex = scenario(text, "codex-all-capabilities")
+        opencode = scenario(text, "opencode-all-capabilities")
+
+        self.assertIn("readable current conversation context", codex)
+        self.assertIn("safe writable temporary directory", codex)
+        self.assertIn("current context before any optional source adapter", codex)
+        self.assertIn("readable current conversation context", opencode)
+        self.assertIn("safe writable temporary directory", opencode)
+        self.assertNotIn("browser automation", opencode)
+
+    def test_favorites_failure_scenarios_explicitly_select_the_skill(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+
+        for name in (
+            "missing-browser-automation",
+            "missing-devonthink-mcp",
+            "summary-write-failure",
+        ):
+            with self.subTest(scenario=name):
+                self.assertIn("explicitly names", scenario(text, name))
+
+    def test_conversation_failure_scenarios_isolate_the_target_capability(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        missing_closing = scenario(text, "missing-conversation-closing")
+        insufficient_context = scenario(text, "insufficient-conversation-context")
+
+        self.assertIn("explicitly names `archiving-to-devonthink`", missing_closing)
+        self.assertIn("safe writable temporary directory", missing_closing)
+        self.assertIn("explicitly names `archiving-to-devonthink`", insufficient_context)
+        self.assertIn("configured DEVONthink MCP", insufficient_context)
+        self.assertIn("safe writable temporary directory", insufficient_context)
 
 
 if __name__ == "__main__":
