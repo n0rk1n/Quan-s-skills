@@ -122,6 +122,16 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertIn("semantic capability", workflow)
         self.assertIn("non-normative examples", workflow)
         self.assertIn("mcp__devonthink.create_record", workflow)
+        self.assertNotIn("use `mcp__devonthink.create_record`", workflow.lower())
+        self.assertNotIn("do not use `create_group_path`", workflow.lower())
+        self.assertNotIn("use `lookup_records`", workflow.lower())
+
+    def test_summary_failure_is_reported_as_partial_completion(self) -> None:
+        workflow = read("archiving-douyin-favorites/references/workflow.md")
+
+        self.assertIn("summary creation or verification fails", workflow)
+        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("do not claim full completion", workflow)
 
 
 class BilibiliPortabilityTests(unittest.TestCase):
