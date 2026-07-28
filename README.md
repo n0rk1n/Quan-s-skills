@@ -7,14 +7,15 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 - `archiving-to-devonthink`: Archive an AI conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record.
 - `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup.
 - `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40.
+- `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24.
 
 ## Required Capabilities
 
-**Favorites skills** (`archiving-douyin-favorites`, `archiving-bilibili-favorites`) require:
+**Bilibili and Douyin list skills** (`archiving-douyin-favorites`, `archiving-bilibili-favorites`, `archiving-bilibili-following`) require:
 - Authenticated browser automation that can inspect and operate the signed-in session, match stable content IDs, and verify removals.
 - DEVONthink MCP operations that can discover Global Inbox and create, look up, update, tag, and verify groups and records.
 
-They stop safely before observing favorites if either capability is unavailable.
+They stop safely before observing the source list if either capability is unavailable.
 
 **Conversation archiving** (`archiving-to-devonthink`) requires:
 - Readable current conversation context (or an optional supported export source).
@@ -37,7 +38,7 @@ mkdir -p ~/.codex/skills
 cp -R Quan-s-skills/<name> ~/.codex/skills/
 ```
 
-Replace `<name>` with one of: `archiving-to-devonthink`, `archiving-douyin-favorites`, `archiving-bilibili-favorites`.
+Replace `<name>` with one of: `archiving-to-devonthink`, `archiving-douyin-favorites`, `archiving-bilibili-favorites`, `archiving-bilibili-following`.
 
 To update an existing install:
 

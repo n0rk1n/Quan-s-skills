@@ -181,10 +181,69 @@ class BilibiliPortabilityTests(unittest.TestCase):
         self.assertIn("do not claim full completion", workflow)
 
 
+@unittest.skipUnless(
+    (ROOT / "archiving-bilibili-following/SKILL.md").is_file(),
+    "archiving-bilibili-following has not been created yet",
+)
+class BilibiliFollowingContractTests(unittest.TestCase):
+    def test_fixed_batch_uses_stable_account_identity_and_stops_on_shortfall(self) -> None:
+        skill = read("archiving-bilibili-following/SKILL.md")
+        workflow = read("archiving-bilibili-following/references/workflow.md")
+
+        self.assertIn("exactly one bounded batch of 24", skill)
+        self.assertIn("stable UID", skill)
+        self.assertIn("https://space.bilibili.com/<UID>", workflow)
+        self.assertIn("fewer than 24", skill)
+        self.assertIn("do not continue to another page", skill)
+
+    def test_archive_gate_requires_fresh_group_and_one_to_one_bookmarks(self) -> None:
+        skill = read("archiving-bilibili-following/SKILL.md")
+        workflow = read("archiving-bilibili-following/references/workflow.md")
+
+        self.assertIn("YYYY-MM-DD Archived Bilibili Following Batch NN", skill)
+        self.assertIn("create fresh inbox group", skill.lower())
+        self.assertIn("Bilibili Following", workflow)
+        self.assertIn("状态：已归档；待取消关注", workflow)
+        self.assertIn("bookmark count", workflow)
+        self.assertIn("unique canonical URL count", workflow)
+        self.assertIn("one-to-one", workflow)
+
+    def test_cleanup_is_uid_scoped_and_accounts_for_immediate_ui_side_effect(self) -> None:
+        workflow = read("archiving-bilibili-following/references/workflow.md")
+
+        self.assertIn("archived_ids", workflow)
+        self.assertIn("submission_ids = archived_ids", workflow)
+        self.assertIn("submission_ids = remaining_ids", workflow)
+        self.assertIn("does not provide bulk unfollow", workflow)
+        self.assertIn("immediately cancels the follow", workflow)
+        self.assertIn("text `关注`", workflow)
+        self.assertIn("never click the same verified-removed UID again", workflow)
+
+    def test_delayed_verification_traverses_every_page_and_requires_exact_delta(self) -> None:
+        workflow = read("archiving-bilibili-following/references/workflow.md")
+
+        self.assertIn("initial_follow_count - 24", workflow)
+        self.assertIn("traverse every page", workflow)
+        self.assertIn("unique_observed_count = current_follow_count", workflow)
+        self.assertIn("target_hits = 0", workflow)
+        self.assertIn("three consecutive attempts", workflow)
+
+    def test_summary_and_interface_metadata_cover_the_full_batch(self) -> None:
+        workflow = read("archiving-bilibili-following/references/workflow.md")
+        metadata = read("archiving-bilibili-following/agents/openai.yaml")
+
+        self.assertIn("24 account names and canonical URLs", workflow)
+        self.assertIn("thumbnail", workflow)
+        self.assertIn("partial completion", workflow)
+        self.assertNotIn("$archiving-bilibili-following", metadata)
+        self.assertIn("Use the archiving-bilibili-following skill", metadata)
+
+
 SKILLS = (
     "archiving-to-devonthink",
     "archiving-douyin-favorites",
     "archiving-bilibili-favorites",
+    "archiving-bilibili-following",
 )
 
 
@@ -192,6 +251,10 @@ class SkillStructureTests(unittest.TestCase):
     def test_frontmatter_has_recognized_required_fields(self) -> None:
         for name in SKILLS:
             with self.subTest(skill=name):
+                self.assertTrue(
+                    (ROOT / name / "SKILL.md").is_file(),
+                    f"missing skill: {name}",
+                )
                 fields = parse_frontmatter(read(f"{name}/SKILL.md"))
                 self.assertEqual(name, fields.get("name"))
                 self.assertRegex(fields["name"], r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
