@@ -1,5 +1,9 @@
 # Baseline Results
 
+The initial creation cycle below records the original strict verification
+contract. The later relaxed-verification iteration supersedes its requirement
+to traverse every following page.
+
 The RED scenario was run in a fresh context without access to the new Skill.
 The evaluator was forbidden from touching live Bilibili or DEVONthink data.
 
@@ -57,3 +61,34 @@ Skill and its required workflow loaded.
   removals.
 - It kept the two unresolved bookmarks partial until a reload plus exhaustive
   traversal proved them absent, and enforced the three-no-progress cutoff.
+
+## Relaxed-verification iteration
+
+### RED: previous Skill behavior
+
+- Result: FAIL
+- Given 24 verified immediate state changes and an exact follow-count decrease
+  of 24, the previous Skill still required traversing all 12 pages.
+- It refused to complete until `observed_count`, `unique_observed_count`, and
+  `target_hits = 0` were calculated from the full remaining list.
+
+### Desired GREEN behavior
+
+- Treat 24 UID-scoped immediate changes from `已关注` to `关注`, plus an exact
+  `initial_follow_count - 24` result after reloading the starting page, as
+  sufficient final verification.
+- Do not traverse every page solely to verify this batch.
+- Retry only UIDs that failed immediate verification or remain visibly followed
+  on the reloaded starting page; do not guess unresolved IDs from a count
+  mismatch.
+
+### Forward-test result
+
+- Result: PASS
+- A fresh-context executor reloaded only the starting page and explicitly
+  declined to visit the other 11 pages.
+- It required `immediate_success_ids = archived_ids`, an exact follow-count
+  decrease of 24, and empty `visible_remaining_ids` before completing the
+  batch.
+- It kept count mismatches partial/unresolved instead of guessing which UID to
+  retry.

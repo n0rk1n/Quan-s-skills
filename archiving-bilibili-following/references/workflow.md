@@ -58,35 +58,36 @@ UID，无需再次确认：
    （常见可见文字为 `已关注`）immediately cancels the follow；点击不是打开预览
    菜单，而是破坏性操作。只有当卡片 UID 属于 `submission_ids` 时才点击。
 4. 每次点击后立即核验该卡片变为未关注状态，例如 text `关注`，并记录结果。
-   若无法证明卡片 UID 或无法证明状态变化，停止该 UID 的操作并报告。已经核验移除
-   的 UID 不得再次点击：never click the same verified-removed UID again。
+   将通过即时状态核验的 UID 加入 `immediate_success_ids`。若无法证明卡片 UID
+   或无法证明状态变化，停止该 UID 的操作并报告。已经核验移除的 UID 不得再次
+   点击：never click the same verified-removed UID again。
 
 ## 延迟核验与重试
 
-1. 第一轮完成后重新加载关注列表。只有当 24 次即时状态核验都成功时，才要求新关注
-   总数严格等于 `initial_follow_count - 24`；数字变化或成功提示本身不构成最终
-   证据。
-2. 从第一页开始 traverse every page，处理分页或懒加载，收集所有仍可见的 stable
-   UID。要求：
-   - `observed_count = current_follow_count`；
-   - `unique_observed_count = current_follow_count`；
-   - `target_hits = 0`，其中 target 是 `archived_ids`。
-3. 计算 `remaining_ids = archived_ids ∩ observed_ids`。若非空，只重试
-   `remaining_ids`；每轮重新加载并从第一页遍历全部页面。若同一 remaining set
-   在 three consecutive attempts 中没有任何进展，停止并报告 unresolved。
-4. 分页会因取消关注而移动；不得从旧页码继续，也不得用关注总数差替代全列表 UID
-   遍历。
+1. 第一轮完成后 reload only the starting page。核验只覆盖本次起始页和关注总数；
+   do not traverse every page，也不要求访问其余分页。
+2. 若 `immediate_success_ids = archived_ids`，要求重新加载后的关注总数严格等于
+   `initial_follow_count - 24`。同时检查起始页中仍可见且仍显示“已关注”的目标
+   UID，记为 `visible_remaining_ids`。24 次即时状态变化加精确总数差即构成本批
+   完成证据；成功提示本身不构成证据。
+3. 若存在未通过即时状态核验的 UID，或 `visible_remaining_ids` 非空，只把这些
+   已知未解决 UID 记为 `remaining_ids` 并重试。若所有 UID 均通过即时核验但关注
+   总数差不是 24，停止并报告 `partial/unresolved`，不得猜测 UID 或扩大重试范围。
+4. 重试仍设置 `submission_ids = remaining_ids`；每轮只重新加载起始页并复核总数。
+   若同一 remaining set 在 three consecutive attempts 中没有进展，停止并报告
+   unresolved。
 
-将已验证消失的 bookmark 状态更新为
-`状态：已归档；已取消关注（重新加载并遍历全部关注页后核验）`；仍出现或无法核验的
-账号写明 `partial/unresolved`。
+将已通过逐项状态变化及重新加载后总数核验的 bookmark 更新为
+`状态：已归档；已取消关注（逐项状态及重新加载后关注总数核验）`；仍出现或无法
+核验的账号写明 `partial/unresolved`。
 
 ## 总结与交付
 
 在同一 fresh group 中创建一份简体中文 Markdown 总结，包含：
 
 - DEVONthink 目标位置、分组名和处理数量；
-- 操作前后关注总数、全部页面 observed/unique 数量与 `target_hits`；
+- 操作前后关注总数、`immediate_success_ids` 数量与
+  `visible_remaining_ids`；
 - 24 account names and canonical URLs；
 - 每个 UID 的取消关注结果、未解决项和重试次数；
 - 可见证据、限制，以及 thumbnail 只能保存头像 URL 的能力边界。
@@ -103,5 +104,6 @@ and cleanup state, report partial completion, and do not claim full completion.
 | “已有 bookmark 就更新，避免重复” | 每次调用创建 fresh group，并在其中为 24 个 UID 建立一一对应记录。 |
 | “批量操作更快” | 批量操作只复制至分组，不会批量取消关注。 |
 | “先点已关注看看菜单” | 该控件会立即取消关注，只能在归档闸门后按 UID 点击。 |
-| “成功提示或总数减少已经足够” | 重新加载、从第一页遍历全部页面并证明 `target_hits = 0`。 |
+| “为了严谨必须遍历全部分页” | 不需要；只重新加载起始页，并结合逐 UID 即时状态与精确总数差核验。 |
+| “成功提示已经足够” | 还需逐 UID 即时状态变化和重新加载后的关注总数。 |
 | “重试全部 24 个最稳” | 只提交 `remaining_ids`，不得再次点击已核验移除的 UID。 |

@@ -219,15 +219,6 @@ class BilibiliFollowingContractTests(unittest.TestCase):
         self.assertIn("text `关注`", workflow)
         self.assertIn("never click the same verified-removed UID again", workflow)
 
-    def test_delayed_verification_traverses_every_page_and_requires_exact_delta(self) -> None:
-        workflow = read("archiving-bilibili-following/references/workflow.md")
-
-        self.assertIn("initial_follow_count - 24", workflow)
-        self.assertIn("traverse every page", workflow)
-        self.assertIn("unique_observed_count = current_follow_count", workflow)
-        self.assertIn("target_hits = 0", workflow)
-        self.assertIn("three consecutive attempts", workflow)
-
     def test_summary_and_interface_metadata_cover_the_full_batch(self) -> None:
         workflow = read("archiving-bilibili-following/references/workflow.md")
         metadata = read("archiving-bilibili-following/agents/openai.yaml")

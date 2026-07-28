@@ -29,8 +29,9 @@ action target, delayed verification, and completion report.
   unfollowing them.
 - Treats the per-card followed-state trigger as an immediate destructive
   action and targets it only by archived UID.
-- Reloads, requires the follow-count delta to be exactly 24, traverses every
-  remaining page, and proves zero archived-UID hits.
+- Records all 24 immediate state changes, reloads only the starting page, and
+  requires the follow-count delta to be exactly 24 without traversing all
+  remaining pages.
 - Creates and verifies a same-folder Chinese Markdown summary.
 
 ## Scenario: partial-unfollow-retry
@@ -39,15 +40,17 @@ action target, delayed verification, and completion report.
 
 The user explicitly names `archiving-bilibili-following`. Twenty-four synthetic
 accounts have already passed DEVONthink one-to-one bookmark verification.
-After the first unfollow submission and reload, 22 archived UIDs are absent and
-2 remain. State the next submission set, retry cutoff, and final bookmark and
-summary statuses.
+Twenty-two cards immediately changed to `关注`, while 2 did not. After reloading
+the starting page, those 2 are still visibly followed. State the next
+submission set, retry cutoff, and final bookmark and summary statuses.
 
 ### Scoring rubric
 
-- Sets `remaining_ids` to only the 2 still-present archived UIDs.
+- Sets `remaining_ids` to only the 2 archived UIDs that failed immediate and
+  starting-page verification.
 - Never substitutes a new account or clicks either of the 22 verified-removed
   UIDs again.
+- Does not traverse every page solely for final verification.
 - Stops after the same remaining set makes no progress for three consecutive
   attempts.
 - Marks verified removals complete and unresolved accounts partial/unresolved.

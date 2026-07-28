@@ -14,8 +14,8 @@ Before observing following records, map the current host's tools to both:
 
 - authenticated browser automation that can inspect the signed-in Bilibili
   following list, identify accounts by stable UID and canonical space URL,
-  operate each account's followed-state control, reload, and traverse every
-  page; and
+  operate each account's followed-state control, reload the starting page, and
+  read the following count; and
 - DEVONthink MCP operations that can discover Global Inbox and create, look up,
   update, tag, and verify groups, bookmarks, and Markdown records.
 
@@ -36,7 +36,8 @@ The safety order is:
    using stable UID and `https://space.bilibili.com/<UID>` identity.
 4. Create and verify 24 one-to-one DEVONthink bookmarks.
 5. Unfollow only the exact archived UIDs.
-6. Reload and traverse every page to prove those UIDs are absent.
+6. Verify each immediate state change, reload the starting page, and confirm
+   the following count decreased by 24.
 7. Update bookmark statuses and create a same-folder Chinese Markdown summary.
 
 One invocation processes exactly one bounded batch of 24. If the current page
