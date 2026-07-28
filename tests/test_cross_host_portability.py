@@ -12,6 +12,46 @@ def read(relative_path: str) -> str:
     return (ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def parse_frontmatter(text: str) -> dict[str, str]:
+    match = re.match(r"\A---\n(.*?)\n---\n", text, re.DOTALL)
+    if match is None:
+        raise ValueError("missing YAML frontmatter")
+
+    fields: dict[str, str] = {}
+    recognized_fields = {"name", "description", "license", "compatibility"}
+    for line in match.group(1).splitlines():
+        if line != line.lstrip():
+            raise ValueError(f"nested frontmatter is unsupported: {line}")
+        if ":" not in line:
+            raise ValueError(f"malformed frontmatter line: {line}")
+        key, value = line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        if not re.fullmatch(r"[a-z][a-z0-9_-]*", key):
+            raise ValueError(f"invalid frontmatter key: {key}")
+        if key not in recognized_fields:
+            raise ValueError(f"unrecognized frontmatter key: {key}")
+        if key in fields:
+            raise ValueError(f"duplicate frontmatter key: {key}")
+        if not value:
+            raise ValueError(f"empty frontmatter value: {key}")
+        if value[0] in "'\"[{|>&*!%@`":
+            raise ValueError(f"only plain scalar frontmatter is supported: {key}")
+        fields[key] = value
+    return fields
+
+
+def scenario(text: str, name: str) -> str:
+    match = re.search(
+        rf"^## Scenario: {re.escape(name)}\n(.*?)(?=^---$|^## Scenario:|\Z)",
+        text,
+        re.DOTALL | re.MULTILINE,
+    )
+    if match is None:
+        return ""
+    return match.group(1)
+
+
 class ConversationPortabilityTests(unittest.TestCase):
     def test_conversation_skill_uses_host_neutral_source_and_names(self) -> None:
         text = read("archiving-to-devonthink/SKILL.md")
@@ -35,6 +75,28 @@ class ConversationPortabilityTests(unittest.TestCase):
 
         self.assertIn("AI 对话", text)
         self.assertNotIn("archive this Codex conversation", text)
+
+    def test_preflight_stops_before_generation_without_devonthink_mcp(self) -> None:
+        text = read("archiving-to-devonthink/SKILL.md")
+        fields = parse_frontmatter(text)
+
+        self.assertIn("explicitly names or invokes", fields["description"])
+        self.assertIn("explicitly names or invokes this skill", text)
+        self.assertIn("Stop before generating temporary files", text)
+        self.assertIn("AppleScript", text)
+        self.assertIn("direct DEVONthink package", text)
+
+    def test_optional_export_adapters_have_executable_commands(self) -> None:
+        text = read("archiving-to-devonthink/SKILL.md")
+
+        self.assertIn(
+            'PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli codex',
+            text,
+        )
+        self.assertIn(
+            'PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli chatgpt',
+            text,
+        )
 
 
 class DouyinPortabilityTests(unittest.TestCase):
