@@ -87,3 +87,41 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
         )
         self.assertIn("**首个可执行步骤：**", template)
         self.assertIn("{{source_thread_uuid}}", template)
+
+
+class ResumingFromConversationHandoffContractTests(unittest.TestCase):
+    def test_reader_skill_exists(self) -> None:
+        self.assertTrue((READER / "SKILL.md").is_file())
+
+    def test_reader_defaults_to_latest_or_accepts_an_explicit_snapshot(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        self.assertIn("explicit snapshot path", skill)
+        self.assertIn(".codex/handoffs/LATEST.md", skill)
+        self.assertIn("Do not scan unrelated directories", skill)
+
+    def test_reader_rechecks_mutable_facts(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        for item in ("branch", "HEAD", "working tree", "tests", "external state"):
+            self.assertIn(item, skill)
+        self.assertIn("current evidence wins", skill)
+
+    def test_reader_uses_uuid_only_when_missing_detail_blocks_progress(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        self.assertIn("source conversation UUID", skill)
+        self.assertIn("only when the missing detail blocks", skill)
+        self.assertIn("ask the user only if the lookup is unavailable", skill)
+
+    def test_reader_continues_without_repeating_completed_work(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        self.assertIn("one-line resume confirmation", skill)
+        self.assertIn("first executable step", skill)
+        self.assertIn("Do not repeat completed work", skill)
+
+    def test_reader_is_read_only_for_handoff_and_archive_state(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        self.assertIn(
+            "Do not modify, replace, or delete the handoff",
+            skill,
+        )
+        self.assertIn("Do not invoke or load `archiving-to-devonthink`", skill)
+        self.assertNotIn("validate_handoff.py", skill)
