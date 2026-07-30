@@ -235,6 +235,8 @@ SKILLS = (
     "archiving-douyin-favorites",
     "archiving-bilibili-favorites",
     "archiving-bilibili-following",
+    "creating-conversation-handoffs",
+    "resuming-from-conversation-handoff",
 )
 
 
@@ -276,7 +278,11 @@ class SkillStructureTests(unittest.TestCase):
             skill_root = (ROOT / name).resolve()
             for markdown_path in skill_root.rglob("*.md"):
                 for target in link_pattern.findall(markdown_path.read_text(encoding="utf-8")):
-                    if "://" in target or target.startswith("#"):
+                    if (
+                        "://" in target
+                        or target.startswith("#")
+                        or "{{" in target
+                    ):
                         continue
                     with self.subTest(skill=name, file=markdown_path.name, target=target):
                         resolved = (markdown_path.parent / target).resolve()
@@ -339,6 +345,14 @@ class ReadmePortabilityTests(unittest.TestCase):
 
         self.assertNotIn("triggers automatically", text)
         self.assertIn("explicitly name or invoke the skill", text)
+
+    def test_readme_documents_conversation_handoff_pair(self) -> None:
+        text = read("README.md")
+
+        self.assertIn(".codex/handoffs/LATEST.md", text)
+        self.assertIn("timestamped snapshot", text)
+        self.assertIn("source conversation UUID", text)
+        self.assertIn("does not archive the source conversation", text)
 
 
 class ScenarioCoverageTests(unittest.TestCase):
