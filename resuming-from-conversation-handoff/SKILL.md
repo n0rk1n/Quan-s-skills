@@ -93,7 +93,9 @@ conversation.
 ## Failure Handling
 
 - Missing entry point: request the exact path or project root.
-- Unsafe or malformed index: stop before opening its target and report why.
+- Unsafe or malformed index: stop before opening its target, report why, then
+  request an explicit safe snapshot path or a complete handoff. Even under no-question pressure, state the required safe input
+  directly, for example: `请提供同一 handoff 目录内的安全快照路径或完整交接内容。`
 - Missing or invalid snapshot contract: stop before continuation and identify
   every structural issue that blocks trust.
 - Mutable-state drift: use live evidence and adjust the next action.

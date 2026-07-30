@@ -60,6 +60,39 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
         self.assertIn("remind the user", skill)
         self.assertIn("after the new conversation resumes successfully", skill)
 
+    def test_generator_returns_a_complete_candidate_when_publish_is_forbidden(
+        self,
+    ) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn(
+            "return a complete candidate snapshot using every template section",
+            skill,
+        )
+        self.assertIn("label it as unvalidated and unpublished", skill)
+
+    def test_generator_uses_the_exact_unavailable_uuid_form(self) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn(
+            "must start with `不可用：` and must not carry a fact-state prefix",
+            skill,
+        )
+
+    def test_generator_never_uses_its_installation_path_as_project_root(
+        self,
+    ) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn(
+            "Never infer the project root from `SKILL_DIR`",
+            skill,
+        )
+
+    def test_generator_forbids_credential_assignment_examples(self) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn(
+            "Do not emit credential-shaped assignment examples",
+            skill,
+        )
+
     def test_template_has_the_exact_required_sections(self) -> None:
         template = read_or_empty(
             GENERATOR / "references" / "handoff-template.md"
@@ -125,3 +158,14 @@ class ResumingFromConversationHandoffContractTests(unittest.TestCase):
         )
         self.assertIn("Do not invoke or load `archiving-to-devonthink`", skill)
         self.assertNotIn("validate_handoff.py", skill)
+
+    def test_reader_requests_a_safe_entry_after_malformed_input(self) -> None:
+        skill = read_or_empty(READER / "SKILL.md")
+        self.assertIn(
+            "request an explicit safe snapshot path or a complete handoff",
+            skill,
+        )
+        self.assertIn(
+            "Even under no-question pressure, state the required safe input",
+            skill,
+        )

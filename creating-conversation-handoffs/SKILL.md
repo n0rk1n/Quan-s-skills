@@ -22,13 +22,16 @@ Skill. Never claim an exact context-use percentage.
 
 1. Resolve the current project or task worktree and obey all injected project,
    Git, and worktree instructions. Default to `<root>/.codex/handoffs/`. Ask for
-   a root only when it is genuinely ambiguous or unwritable.
+   a root only when it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
+   or from the location of this Skill, its template, or its validator.
 2. If `LATEST.md` exists, resolve only a relative target inside the same
    handoff directory and validate both index and snapshot before using them.
    Preserve malformed or untrusted existing content and report the problem.
 3. Obtain the exact source conversation UUID from available task, thread,
    session context, or session lookup. If unavailable, record a concrete reason
-   such as `不可用：当前宿主未提供任务 UUID`; never invent an identifier.
+   such as `不可用：当前宿主未提供任务 UUID`; never invent an identifier. The
+   metadata value must start with `不可用：` and must not carry a fact-state prefix
+   when no real UUID is available.
 4. Gather the current conversation plus relevant live evidence. Recheck
    mutable Git, file, test, deployment, CI, permission, connection, and
    external state in proportion to its effect on the next action.
@@ -47,7 +50,8 @@ Use `references/handoff-template.md` and replace every token.
 - Keep only continuation-relevant material. Exclude secrets, tokens,
   passwords, cookies, credentials, unnecessary personal identifiers, private
   reasoning, and unfiltered logs or tool output. Record a variable name or safe
-  source location instead of a secret value.
+  source location instead of a secret value. Do not emit credential-shaped assignment examples,
+  even when their values look like placeholders; describe the source in prose.
 - Include the real source UUID so a new conversation can look up the source
   only if missing detail later blocks progress.
 
@@ -55,6 +59,11 @@ Use `references/handoff-template.md` and replace every token.
 
 Let `SKILL_DIR` be this Skill directory and `HANDOFF_DIR` the resolved
 `<root>/.codex/handoffs/` directory.
+
+If publication tools or file writes are unavailable but the user explicitly
+asks for handoff content, return a complete candidate snapshot using every template section.
+Fill unavailable facts with concrete reasons, label it as unvalidated and unpublished,
+and do not invent a path or claim that `LATEST.md` changed.
 
 1. Generate a local-time `YYYY-MM-DD-HHmm` value and a lowercase safe topic
    slug. Run:
