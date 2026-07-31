@@ -349,7 +349,7 @@ class ReadmePortabilityTests(unittest.TestCase):
     def test_readme_documents_conversation_handoff_pair(self) -> None:
         text = read("README.md")
 
-        self.assertIn(".handoffs/LATEST.md", text)
+        self.assertIn("oriki-handoffs/LATEST.md", text)
         self.assertIn(".codex/handoffs/", text)
         self.assertIn("timestamped snapshot", text)
         self.assertIn("host-qualified source reference", text)
@@ -398,9 +398,9 @@ class ScenarioCoverageTests(unittest.TestCase):
         codex = scenario(text, "codex-handoff-generation")
         opencode = scenario(text, "opencode-handoff-generation")
 
-        self.assertIn(".handoffs/LATEST.md", codex)
+        self.assertIn("oriki-handoffs/LATEST.md", codex)
         self.assertIn("codex:", codex)
-        self.assertIn(".handoffs/LATEST.md", opencode)
+        self.assertIn("oriki-handoffs/LATEST.md", opencode)
         self.assertIn("opencode:", opencode)
 
     def test_favorites_failure_scenarios_explicitly_select_the_skill(self) -> None:

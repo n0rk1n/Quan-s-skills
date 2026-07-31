@@ -21,10 +21,10 @@ Skill. Never claim an exact context-use percentage.
 ## Required Inputs
 
 1. Resolve the current project or task worktree and obey all injected project,
-   Git, and worktree instructions. Default to `<root>/.handoffs/`. If that directory
-   does not exist and `<root>/.codex/handoffs/LATEST.md` exists, use that legacy
-   compatibility fallback instead of splitting its history. Ask for a root only when
-   it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
+   Git, and worktree instructions. Default to `<root>/oriki-handoffs/`. Create the
+   directory when it does not exist. Existing `<root>/.codex/handoffs/` snapshots
+   remain readable through the resume skill but do not change this publishing path.
+   Ask for a root only when it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
    or from the location of this Skill, its template, or its validator.
 2. If `LATEST.md` exists, resolve only a relative target inside the same
    handoff directory and validate both index and snapshot before using them.
@@ -62,7 +62,7 @@ Use `references/handoff-template.md` and replace every token.
 ## Publish Workflow
 
 Let `SKILL_DIR` be this Skill directory and `HANDOFF_DIR` the resolved
-`<root>/.handoffs/` directory or the selected legacy compatibility fallback.
+`<root>/oriki-handoffs/` directory.
 
 If publication tools or file writes are unavailable but the user explicitly
 asks for handoff content, return a complete candidate snapshot using every template section.

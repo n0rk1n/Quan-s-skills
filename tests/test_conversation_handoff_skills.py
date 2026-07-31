@@ -86,13 +86,13 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
             skill,
         )
 
-    def test_generator_defaults_to_a_host_neutral_directory_with_legacy_fallback(
+    def test_generator_creates_the_neutral_directory_before_publishing(
         self,
     ) -> None:
         skill = read_or_empty(GENERATOR / "SKILL.md")
-        self.assertIn("<root>/.handoffs/", skill)
+        self.assertIn("<root>/oriki-handoffs/", skill)
+        self.assertIn("directory when it does not exist", skill)
         self.assertIn("<root>/.codex/handoffs/", skill)
-        self.assertIn("legacy compatibility fallback", skill)
 
     def test_generator_uses_host_qualified_source_references(self) -> None:
         skill = read_or_empty(GENERATOR / "SKILL.md")
@@ -142,7 +142,7 @@ class ResumingFromConversationHandoffContractTests(unittest.TestCase):
     def test_reader_defaults_to_latest_or_accepts_an_explicit_snapshot(self) -> None:
         skill = read_or_empty(READER / "SKILL.md")
         self.assertIn("explicit snapshot path", skill)
-        self.assertIn(".handoffs/LATEST.md", skill)
+        self.assertIn("oriki-handoffs/LATEST.md", skill)
         self.assertIn(".codex/handoffs/LATEST.md", skill)
         self.assertIn("legacy compatibility fallback", skill)
         self.assertIn("Do not scan unrelated directories", skill)

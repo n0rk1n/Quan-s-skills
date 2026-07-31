@@ -1,6 +1,6 @@
 ---
 name: resuming-from-conversation-handoff
-description: Use when continuing work from a conversation handoff, a .handoffs/LATEST.md index, or a timestamped handoff snapshot.
+description: Use when continuing work from a conversation handoff, an oriki-handoffs/LATEST.md index, or a timestamped handoff snapshot.
 ---
 
 # Resuming From a Conversation Handoff
@@ -12,9 +12,9 @@ evidence and a work queue; it is not proof that mutable state remains current.
 
 1. Use an explicit snapshot path when the user supplies one.
 2. Otherwise resolve the current project or task worktree and open
-   `.handoffs/LATEST.md`. If it does not exist, use
+   `oriki-handoffs/LATEST.md`. If it does not exist, use
    `.codex/handoffs/LATEST.md` as a legacy compatibility fallback. When both
-   exist, use `.handoffs/LATEST.md`.
+   exist, use `oriki-handoffs/LATEST.md`.
 3. Do not scan unrelated directories. If neither entry point is available,
    ask for the exact snapshot or project root.
 4. For `LATEST.md`, accept exactly one relative Markdown link. Reject absolute

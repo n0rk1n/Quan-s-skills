@@ -8,7 +8,7 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 - `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup.
 - `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40.
 - `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24.
-- `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.handoffs/LATEST.md` index before continuing in a new conversation; existing `.codex/handoffs/` indexes remain readable.
+- `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `oriki-handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `.codex/handoffs/` indexes remain readable.
 - `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work.
 
 ## Required Capabilities

@@ -51,9 +51,9 @@ conversation.
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Uses a neutral handoff directory | Publishes under `.handoffs/` and updates `.handoffs/LATEST.md` after validation | Uses a Codex-specific directory for a new handoff |
+| Uses a neutral handoff directory | Creates `oriki-handoffs/`, then publishes under it and updates `oriki-handoffs/LATEST.md` after validation | Uses a Codex-specific directory for a new handoff |
 | Records the source in portable form | Writes `codex:<conversation-id>` without inventing an ID | Stores a bare host-specific ID or invents one |
-| Preserves existing history | Uses `.codex/handoffs/LATEST.md` only as the documented legacy compatibility fallback | Splits or overwrites a legacy handoff chain |
+| Preserves existing history | Leaves `.codex/handoffs/` snapshots intact for compatibility reads | Rewrites or overwrites legacy handoffs |
 
 ---
 
@@ -70,7 +70,7 @@ conversation.
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Uses the same portable location | Publishes under `.handoffs/` and updates `.handoffs/LATEST.md` after validation | Uses `.codex/handoffs` for a new handoff |
+| Uses the same portable location | Creates `oriki-handoffs/`, then publishes under it and updates `oriki-handoffs/LATEST.md` after validation | Uses `.codex/handoffs` for a new handoff |
 | Records the source in portable form | Writes `opencode:<conversation-id>` | Requires a UUID or invents one |
 | Keeps the protocol host-neutral | Uses the Markdown snapshot and current host capabilities | Requests Codex-only session APIs or paths |
 
