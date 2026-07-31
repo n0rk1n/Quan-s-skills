@@ -24,20 +24,16 @@ REQUIRED_SECTIONS: Final = (
     "新对话续接指令",
 )
 METADATA_KEYS: Final = (
-    "Schema 版本",
-    "生成时间",
-    "任务摘要",
-    "旧对话 UUID",
-    "项目或 worktree 根目录",
-    "上一个快照",
+    "Schema 版本", "生成时间", "任务摘要", "旧会话来源",
+    "项目或 worktree 根目录", "上一个快照",
 )
 VALID_FACT_STATES: Final = frozenset({"已验证", "用户确认", "待核实"})
-SNAPSHOT_NAME: Final = re.compile(
-    r"^\d{4}-\d{2}-\d{2}-\d{4}-[a-z0-9]+"
+SNAPSHOT_NAME: Final = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{4}-[a-z0-9]+"
     r"(?:-[a-z0-9]+)*(?:-\d{2})?\.md$"
 )
 TIMESTAMP: Final = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{4}$")
 TOPIC_SLUG: Final = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+SOURCE_REFERENCE: Final = re.compile(r"^[a-z][a-z0-9-]{0,63}:\S+$")
 TEMPLATE_TOKEN: Final = re.compile(r"\{\{[a-z][a-z0-9_]*\}\}")
 POSSIBLE_SECRET: Final = re.compile(
     r"(?i)\b(?:password|passwd|token|secret|api[_-]?(?:key|token))\b"
@@ -45,9 +41,8 @@ POSSIBLE_SECRET: Final = re.compile(
 )
 LATEST_LINK: Final = re.compile(r"^- 最新快照：\[[^\]]+\]\(([^)]+)\)$", re.MULTILINE)
 METADATA_LINE: Final = re.compile(
-    r"^- (Schema 版本|生成时间|任务摘要|旧对话 UUID|"
-    r"项目或 worktree 根目录|上一个快照)[：:](.+)$",
-    re.MULTILINE,
+    r"^- (Schema 版本|生成时间|任务摘要|旧会话来源|旧对话 UUID|"
+    r"项目或 worktree 根目录|上一个快照)[：:](.+)$", re.MULTILINE
 )
 
 
@@ -70,7 +65,11 @@ def _read_regular_file(path: Path) -> tuple[str, list[ValidationIssue]]:
 
 
 def _metadata(text: str) -> dict[str, str]:
-    return {key: value.strip() for key, value in METADATA_LINE.findall(text)}
+    values = {key: value.strip() for key, value in METADATA_LINE.findall(text)}
+    legacy_uuid = values.get("旧对话 UUID")
+    if not values.get("旧会话来源") and legacy_uuid:
+        values["旧会话来源"] = legacy_uuid
+    return values
 
 
 def _section(text: str, name: str) -> str:
@@ -82,8 +81,10 @@ def _section(text: str, name: str) -> str:
     return "" if match is None else match.group(1)
 
 
-def _valid_source_uuid(value: str) -> bool:
+def _valid_source_reference(value: str) -> bool:
     if re.fullmatch(r"不可用：\S.+", value):
+        return True
+    if SOURCE_REFERENCE.fullmatch(value):
         return True
     try:
         uuid.UUID(value)
@@ -129,12 +130,12 @@ def _metadata_issues(text: str) -> list[ValidationIssue]:
         issues.append(
             ValidationIssue("unsupported-schema", "Schema 版本 must be 1")
         )
-    source_uuid = values.get("旧对话 UUID")
-    if source_uuid and not _valid_source_uuid(source_uuid):
+    source_reference = values.get("旧会话来源")
+    if source_reference and not _valid_source_reference(source_reference):
         issues.append(
             ValidationIssue(
-                "invalid-source-uuid",
-                "旧对话 UUID must be a UUID or 不可用：<原因>",
+                "invalid-source-reference",
+                "旧会话来源 must be <host>:<conversation-id>, a legacy UUID, or 不可用：<原因>",
             )
         )
     return issues

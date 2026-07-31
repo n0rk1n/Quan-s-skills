@@ -1,6 +1,6 @@
 ---
 name: resuming-from-conversation-handoff
-description: Use when continuing work from a conversation handoff, a .codex/handoffs/LATEST.md index, or a timestamped handoff snapshot.
+description: Use when continuing work from a conversation handoff, a .handoffs/LATEST.md index, or a timestamped handoff snapshot.
 ---
 
 # Resuming From a Conversation Handoff
@@ -12,7 +12,9 @@ evidence and a work queue; it is not proof that mutable state remains current.
 
 1. Use an explicit snapshot path when the user supplies one.
 2. Otherwise resolve the current project or task worktree and open
-   `.codex/handoffs/LATEST.md`.
+   `.handoffs/LATEST.md`. If it does not exist, use
+   `.codex/handoffs/LATEST.md` as a legacy compatibility fallback. When both
+   exist, use `.handoffs/LATEST.md`.
 3. Do not scan unrelated directories. If neither entry point is available,
    ask for the exact snapshot or project root.
 4. For `LATEST.md`, accept exactly one relative Markdown link. Reject absolute
@@ -41,8 +43,9 @@ Require schema version `1` and exactly these level-two sections in order:
 14. `来源信息与回查`
 15. `新对话续接指令`
 
-Require a nonempty source conversation UUID or a concrete `不可用：<原因>`
-marker, fact states limited to `已验证`, `用户确认`, and `待核实`, and a marked
+Require a nonempty source conversation reference in `<host>:<conversation-id>`
+form, a legacy UUID, or a concrete `不可用：<原因>` marker; also require fact
+states limited to `已验证`, `用户确认`, and `待核实`, and a marked
 `首个可执行步骤`. Stop and report the exact structural problem when these
 checks fail; do not infer missing content.
 
@@ -68,7 +71,7 @@ When the snapshot conflicts with live observations, current evidence wins.
 Report only drift that changes execution, and keep expensive unrelated checks
 as `待核实` rather than presenting them as current facts.
 
-If necessary detail is absent, use the source conversation UUID only when the missing detail blocks
+If necessary detail is absent, use the source conversation reference only when the missing detail blocks
 the first executable step. Use an available task, thread, session, or
 coding-agent-session read capability and read the minimum relevant source
 context; ask the user only if the lookup is unavailable or insufficient and the
@@ -99,7 +102,7 @@ conversation.
 - Missing or invalid snapshot contract: stop before continuation and identify
   every structural issue that blocks trust.
 - Mutable-state drift: use live evidence and adjust the next action.
-- Unavailable UUID lookup: ask only when the unresolved detail is blocking;
+- Unavailable source-reference lookup: ask only when the unresolved detail is blocking;
   otherwise retain `待核实` and continue safely.
 
 Do not modify, replace, or delete the handoff or its `LATEST.md` index.

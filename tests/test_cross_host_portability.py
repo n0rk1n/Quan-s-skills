@@ -349,9 +349,10 @@ class ReadmePortabilityTests(unittest.TestCase):
     def test_readme_documents_conversation_handoff_pair(self) -> None:
         text = read("README.md")
 
-        self.assertIn(".codex/handoffs/LATEST.md", text)
+        self.assertIn(".handoffs/LATEST.md", text)
+        self.assertIn(".codex/handoffs/", text)
         self.assertIn("timestamped snapshot", text)
-        self.assertIn("source conversation UUID", text)
+        self.assertIn("host-qualified source reference", text)
         self.assertIn("does not archive the source conversation", text)
 
 
@@ -370,6 +371,8 @@ class ScenarioCoverageTests(unittest.TestCase):
             "bilibili-partial-retry",
             "semantic-mcp-tool-names",
             "summary-write-failure",
+            "codex-handoff-generation",
+            "opencode-handoff-generation",
         )
 
         for scenario in scenarios:
@@ -389,6 +392,16 @@ class ScenarioCoverageTests(unittest.TestCase):
         self.assertIn("readable current conversation context", opencode)
         self.assertIn("safe writable temporary directory", opencode)
         self.assertNotIn("browser automation", opencode)
+
+    def test_handoff_scenarios_use_neutral_paths_and_host_references(self) -> None:
+        text = read("tests/cross-host-portability/evaluations.md")
+        codex = scenario(text, "codex-handoff-generation")
+        opencode = scenario(text, "opencode-handoff-generation")
+
+        self.assertIn(".handoffs/LATEST.md", codex)
+        self.assertIn("codex:", codex)
+        self.assertIn(".handoffs/LATEST.md", opencode)
+        self.assertIn("opencode:", opencode)
 
     def test_favorites_failure_scenarios_explicitly_select_the_skill(self) -> None:
         text = read("tests/cross-host-portability/evaluations.md")

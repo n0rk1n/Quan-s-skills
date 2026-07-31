@@ -16,9 +16,13 @@ VALIDATOR = (
     / "validate_handoff.py"
 )
 SOURCE_UUID = "11111111-1111-4111-8111-111111111111"
+SOURCE_REFERENCE = "opencode:session-2026-07-31"
 
 
-def valid_snapshot() -> str:
+def valid_snapshot(
+    source_reference: str = SOURCE_REFERENCE,
+    source_key: str = "旧会话来源",
+) -> str:
     return textwrap.dedent(
         f"""\
         # 对话交接：handoff-validator
@@ -28,7 +32,7 @@ def valid_snapshot() -> str:
         - Schema 版本：1
         - 生成时间：2026-07-30T10:30:00+08:00
         - 任务摘要：验证交接文件
-        - 旧对话 UUID：{SOURCE_UUID}
+        - {source_key}：{source_reference}
         - 项目或 worktree 根目录：/private/tmp/handoff-project
         - 上一个快照：不适用
 
@@ -86,7 +90,7 @@ def valid_snapshot() -> str:
 
         ## 来源信息与回查
 
-        - 旧对话 UUID：{SOURCE_UUID}
+        - 旧会话来源：{source_reference}
 
         ## 新对话续接指令
 
@@ -102,7 +106,7 @@ def latest_text(snapshot_name: str) -> str:
 
         - 最新快照：[handoff-validator]({snapshot_name})
         - 生成时间：2026-07-30T10:30:00+08:00
-        - 旧对话 UUID：{SOURCE_UUID}
+        - 旧会话来源：{SOURCE_REFERENCE}
         - 任务摘要：验证交接文件
         """
     )
@@ -142,14 +146,32 @@ class HandoffValidatorCliTests(unittest.TestCase):
             self.assertEqual(0, completed.returncode, completed.stderr)
             self.assertIn("PASS", completed.stdout)
 
-    def test_unavailable_uuid_with_reason_passes(self) -> None:
-        content = valid_snapshot().replace(
-            SOURCE_UUID,
-            "不可用：当前宿主未提供任务 UUID",
-        )
+    def test_unavailable_source_reference_with_reason_passes(self) -> None:
+        content = valid_snapshot("不可用：当前宿主未提供会话标识")
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "2026-07-30-1030-validator.md"
             path.write_text(content, encoding="utf-8")
+
+            completed = self.run_cli("snapshot", str(path))
+
+            self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_host_qualified_source_reference_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "2026-07-30-1030-validator.md"
+            path.write_text(valid_snapshot(), encoding="utf-8")
+
+            completed = self.run_cli("snapshot", str(path))
+
+            self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_legacy_uuid_metadata_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "2026-07-30-1030-validator.md"
+            path.write_text(
+                valid_snapshot(SOURCE_UUID, "旧对话 UUID"),
+                encoding="utf-8",
+            )
 
             completed = self.run_cli("snapshot", str(path))
 
@@ -213,11 +235,11 @@ class HandoffValidatorCliTests(unittest.TestCase):
         )
 
     def test_invalid_uuid_fails(self) -> None:
-        content = valid_snapshot().replace(SOURCE_UUID, "made-up-id")
+        content = valid_snapshot("made-up-id")
         self.assert_snapshot_error(
             "2026-07-30-1030-validator.md",
             content,
-            "invalid-source-uuid",
+            "invalid-source-reference",
         )
 
     def test_unresolved_template_token_fails(self) -> None:

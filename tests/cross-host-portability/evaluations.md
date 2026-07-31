@@ -38,6 +38,44 @@ You are operating in OpenCode with readable current conversation context, a conf
 
 ---
 
+## Scenario: codex-handoff-generation
+
+### Prompt
+
+You are operating in Codex with readable current conversation context, a writable
+project worktree, and a source conversation ID. The user explicitly names
+`creating-conversation-handoffs` and asks to prepare the task for a new
+conversation.
+
+### Scoring rubric
+
+| Criterion | Pass | Fail |
+|-----------|------|------|
+| Uses a neutral handoff directory | Publishes under `.handoffs/` and updates `.handoffs/LATEST.md` after validation | Uses a Codex-specific directory for a new handoff |
+| Records the source in portable form | Writes `codex:<conversation-id>` without inventing an ID | Stores a bare host-specific ID or invents one |
+| Preserves existing history | Uses `.codex/handoffs/LATEST.md` only as the documented legacy compatibility fallback | Splits or overwrites a legacy handoff chain |
+
+---
+
+## Scenario: opencode-handoff-generation
+
+### Prompt
+
+You are operating in OpenCode with readable current conversation context, a writable
+project worktree, and a source conversation ID. The user explicitly names
+`creating-conversation-handoffs` and asks to prepare the task for a new
+conversation.
+
+### Scoring rubric
+
+| Criterion | Pass | Fail |
+|-----------|------|------|
+| Uses the same portable location | Publishes under `.handoffs/` and updates `.handoffs/LATEST.md` after validation | Uses `.codex/handoffs` for a new handoff |
+| Records the source in portable form | Writes `opencode:<conversation-id>` | Requires a UUID or invents one |
+| Keeps the protocol host-neutral | Uses the Markdown snapshot and current host capabilities | Requests Codex-only session APIs or paths |
+
+---
+
 ## Scenario: missing-browser-automation
 
 ### Prompt

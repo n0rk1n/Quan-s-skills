@@ -10,7 +10,7 @@ unresolved tokens. Keep the snapshot's level-two headings exactly as written.
 - Schema 版本：1
 - 生成时间：{{generated_at}}
 - 任务摘要：{{task_summary}}
-- 旧对话 UUID：{{source_thread_uuid}}
+- 旧会话来源：{{source_reference}}
 - 项目或 worktree 根目录：{{project_root}}
 - 上一个快照：{{previous_handoff}}
 
@@ -70,7 +70,7 @@ unresolved tokens. Keep the snapshot's level-two headings exactly as written.
 
 ## 来源信息与回查
 
-- 旧对话 UUID：{{source_thread_uuid}}
+- 旧会话来源：{{source_reference}}
 - 生成时间：{{generated_at}}
 - 上一个快照：{{previous_handoff}}
 - 宿主或会话类型：{{source_host}}
@@ -78,7 +78,7 @@ unresolved tokens. Keep the snapshot's level-two headings exactly as written.
 
 ## 新对话续接指令
 
-完整读取本快照，复核易变化事实并报告影响执行的差异；不要重复已完成事项，从首个可执行步骤继续。内容不足且阻塞执行时，按旧对话 UUID 回查。
+完整读取本快照，复核易变化事实并报告影响执行的差异；不要重复已完成事项，从首个可执行步骤继续。内容不足且阻塞执行时，按旧会话来源回查。
 
 # LATEST.md 模板
 
@@ -87,6 +87,6 @@ unresolved tokens. Keep the snapshot's level-two headings exactly as written.
 
 - 最新快照：[{{snapshot_label}}]({{snapshot_relative_path}})
 - 生成时间：{{generated_at}}
-- 旧对话 UUID：{{source_thread_uuid}}
+- 旧会话来源：{{source_reference}}
 - 任务摘要：{{task_summary}}
 ```

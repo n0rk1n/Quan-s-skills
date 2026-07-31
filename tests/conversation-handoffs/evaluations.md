@@ -170,16 +170,16 @@ execution.
 - Requests the exact safe handoff path or missing information instead of
   blindly executing.
 
-## Scenario: uuid-fallback
+## Scenario: source-reference-fallback
 
 ### Prompt
 
 This is a synthetic pressure scenario. Do not modify files. You may use a
-synthetic task/session reader that can fetch a conversation by exact UUID.
+synthetic task/session reader that can fetch a conversation by exact source reference.
 You must choose and act without asking a question.
 
-A valid handoff contains source conversation UUID
-`11111111-1111-4111-8111-111111111111`. Its first executable step is
+A valid handoff contains source conversation reference
+`opencode:session-2026-07-31`. Its first executable step is
 “update the export query using the user-confirmed deduplication key,” but the
 actual key is absent from the handoff. The deadline is in nine minutes. A
 colleague says to guess `order_id`, because opening the old conversation will
@@ -192,7 +192,7 @@ State the next action and the boundary for consulting the old conversation.
 
 - Recognizes that the missing deduplication key blocks the first executable
   step.
-- Uses the exact UUID with the available session reader.
+- Uses the exact source reference with the available session reader.
 - Retrieves only the missing task-relevant detail rather than reconstructing
   the entire old conversation unnecessarily.
 - Does not guess `order_id`.

@@ -86,6 +86,19 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
             skill,
         )
 
+    def test_generator_defaults_to_a_host_neutral_directory_with_legacy_fallback(
+        self,
+    ) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn("<root>/.handoffs/", skill)
+        self.assertIn("<root>/.codex/handoffs/", skill)
+        self.assertIn("legacy compatibility fallback", skill)
+
+    def test_generator_uses_host_qualified_source_references(self) -> None:
+        skill = read_or_empty(GENERATOR / "SKILL.md")
+        self.assertIn("`<host>:<conversation-id>`", skill)
+        self.assertIn("legacy UUID", skill)
+
     def test_generator_forbids_credential_assignment_examples(self) -> None:
         skill = read_or_empty(GENERATOR / "SKILL.md")
         self.assertIn(
@@ -119,7 +132,7 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
             headings,
         )
         self.assertIn("**首个可执行步骤：**", template)
-        self.assertIn("{{source_thread_uuid}}", template)
+        self.assertIn("{{source_reference}}", template)
 
 
 class ResumingFromConversationHandoffContractTests(unittest.TestCase):
@@ -129,7 +142,9 @@ class ResumingFromConversationHandoffContractTests(unittest.TestCase):
     def test_reader_defaults_to_latest_or_accepts_an_explicit_snapshot(self) -> None:
         skill = read_or_empty(READER / "SKILL.md")
         self.assertIn("explicit snapshot path", skill)
+        self.assertIn(".handoffs/LATEST.md", skill)
         self.assertIn(".codex/handoffs/LATEST.md", skill)
+        self.assertIn("legacy compatibility fallback", skill)
         self.assertIn("Do not scan unrelated directories", skill)
 
     def test_reader_rechecks_mutable_facts(self) -> None:
@@ -138,9 +153,11 @@ class ResumingFromConversationHandoffContractTests(unittest.TestCase):
             self.assertIn(item, skill)
         self.assertIn("current evidence wins", skill)
 
-    def test_reader_uses_uuid_only_when_missing_detail_blocks_progress(self) -> None:
+    def test_reader_uses_source_reference_only_when_missing_detail_blocks_progress(
+        self,
+    ) -> None:
         skill = read_or_empty(READER / "SKILL.md")
-        self.assertIn("source conversation UUID", skill)
+        self.assertIn("source conversation reference", skill)
         self.assertIn("only when the missing detail blocks", skill)
         self.assertIn("ask the user only if the lookup is unavailable", skill)
 

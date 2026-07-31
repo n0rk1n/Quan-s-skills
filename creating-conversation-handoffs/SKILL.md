@@ -21,17 +21,21 @@ Skill. Never claim an exact context-use percentage.
 ## Required Inputs
 
 1. Resolve the current project or task worktree and obey all injected project,
-   Git, and worktree instructions. Default to `<root>/.codex/handoffs/`. Ask for
-   a root only when it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
+   Git, and worktree instructions. Default to `<root>/.handoffs/`. If that directory
+   does not exist and `<root>/.codex/handoffs/LATEST.md` exists, use that legacy
+   compatibility fallback instead of splitting its history. Ask for a root only when
+   it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
    or from the location of this Skill, its template, or its validator.
 2. If `LATEST.md` exists, resolve only a relative target inside the same
    handoff directory and validate both index and snapshot before using them.
    Preserve malformed or untrusted existing content and report the problem.
-3. Obtain the exact source conversation UUID from available task, thread,
-   session context, or session lookup. If unavailable, record a concrete reason
-   such as `不可用：当前宿主未提供任务 UUID`; never invent an identifier. The
+3. Obtain the exact source conversation reference from available task, thread,
+   session context, or session lookup. For new snapshots, use
+   `<host>:<conversation-id>` (for example, `opencode:session-123`); retain a
+   legacy UUID unchanged when continuing an older snapshot. If unavailable, record
+   a concrete reason such as `不可用：当前宿主未提供会话标识`; never invent an identifier. The
    metadata value must start with `不可用：` and must not carry a fact-state prefix
-   when no real UUID is available.
+   when no real reference is available.
 4. Gather the current conversation plus relevant live evidence. Recheck
    mutable Git, file, test, deployment, CI, permission, connection, and
    external state in proportion to its effect on the next action.
@@ -52,13 +56,13 @@ Use `references/handoff-template.md` and replace every token.
   reasoning, and unfiltered logs or tool output. Record a variable name or safe
   source location instead of a secret value. Do not emit credential-shaped assignment examples,
   even when their values look like placeholders; describe the source in prose.
-- Include the real source UUID so a new conversation can look up the source
+- Include the real source conversation reference so a new conversation can look up the source
   only if missing detail later blocks progress.
 
 ## Publish Workflow
 
 Let `SKILL_DIR` be this Skill directory and `HANDOFF_DIR` the resolved
-`<root>/.codex/handoffs/` directory.
+`<root>/.handoffs/` directory or the selected legacy compatibility fallback.
 
 If publication tools or file writes are unavailable but the user explicitly
 asks for handoff content, return a complete candidate snapshot using every template section.
@@ -74,7 +78,7 @@ and do not invent a path or claim that `LATEST.md` changed.
    ```
 
 2. Write the fully rendered candidate snapshot in a safe temporary directory.
-   Semantically review its completeness, evidence labels, UUID provenance, and
+   Semantically review its completeness, evidence labels, source-reference provenance, and
    sensitive information.
 3. Run `validate the candidate snapshot` with:
 
@@ -119,7 +123,7 @@ delete the source conversation.
 
 - Writing a one-paragraph or delta-only handoff under deadline pressure.
 - Treating old Git, test, deployment, or external state as current evidence.
-- Inventing a plausible UUID or retaining a pasted credential.
+- Inventing a plausible source reference or retaining a pasted credential.
 - Publishing before validation or replacing the last valid index after a
   partial failure.
 - Claiming success without an absolute snapshot path and validated index.

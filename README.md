@@ -8,7 +8,7 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 - `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup.
 - `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40.
 - `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24.
-- `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.codex/handoffs/LATEST.md` index before continuing in a new conversation.
+- `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.handoffs/LATEST.md` index before continuing in a new conversation; existing `.codex/handoffs/` indexes remain readable.
 - `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work.
 
 ## Required Capabilities
@@ -30,7 +30,12 @@ They stop safely before observing the source list if either capability is unavai
 - Readable current conversation context for generation.
 - A writable current project or task worktree.
 - Git, filesystem, test, and external-state inspection appropriate to the task.
-- Optional task, thread, or session reading by source conversation UUID when the handoff is insufficient.
+- Optional task, thread, or session reading by source conversation reference when the handoff is insufficient.
+
+New snapshots use a host-qualified source reference such as `opencode:session-123`.
+Legacy UUID-only snapshots remain valid. If a host provides neither a stable ID nor
+a lookup capability, the snapshot records `不可用：<原因>` and remains usable as a
+file-based handoff.
 
 Generation requires explicit invocation. It may be recommended when context-risk symptoms appear, but it does not write automatically and does not archive the source conversation.
 
