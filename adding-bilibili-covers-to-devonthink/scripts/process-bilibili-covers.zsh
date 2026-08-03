@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+readonly SCRIPT_NAME="${0:t}"
 # One invocation is one bounded user-visible batch. This is not configurable.
 readonly BATCH_LIMIT=50
 readonly SOURCE_GROUP_NAME="01 - 无封面图"
@@ -10,8 +11,8 @@ readonly PARALLEL_DOWNLOADS=4
 
 usage() {
   print -- "Usage:"
-  print -- "  ${0:t} --root <DEVONthink UUID> [--plan-only]"
-  print -- "  ${0:t} --plan-manifest <manifest.jsonl>"
+  print -- "  $SCRIPT_NAME --root <DEVONthink UUID> [--plan-only]"
+  print -- "  $SCRIPT_NAME --plan-manifest <manifest.jsonl>"
   print -- ""
   print -- "Processes at most 50 eligible Bilibili bookmarks per invocation."
 }

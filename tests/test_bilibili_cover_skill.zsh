@@ -43,6 +43,7 @@ small_plan="$($script --plan-manifest "$small_manifest")"
 [[ "$(jq -r '.selected_count' <<< "$small_plan")" == "12" ]]
 
 help_text="$($script --help)"
+[[ "$help_text" == "Usage:"$'\n'"  process-bilibili-covers.zsh --root <DEVONthink UUID> [--plan-only]"* ]]
 [[ "$help_text" == *"--root <DEVONthink UUID>"* ]]
 [[ "$help_text" == *"at most 50"* ]]
 
