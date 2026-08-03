@@ -1,0 +1,4 @@
+interface:
+  display_name: "整理 Bilibili 封面"
+  short_description: "Pair Bilibili bookmarks with DEVONthink covers."
+  default_prompt: "Use $adding-bilibili-covers-to-devonthink to process the next DEVONthink batch of up to 50 Bilibili bookmarks."
