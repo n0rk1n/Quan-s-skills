@@ -2,6 +2,8 @@
 
 ## Workflow Checklist
 
+Map host tools by semantic capability, not by exact name. Names such as `mcp__devonthink.get_databases`, `mcp__devonthink.create_record`, and `mcp__devonthink.set_record_tags` are non-normative examples; use equivalent DEVONthink MCP operations exposed by the current host.
+
 1. Confirm the Skill was explicitly invoked, a signed-in browser is available, and the DEVONthink MCP server is usable. If DEVONthink MCP is missing or cannot operate, stop; do not offer or run a reduced local-only workflow.
 2. Use DEVONthink MCP tools to locate the Global Inbox database, then create a fresh invocation folder named exactly `YYYY-MM-DD Archived DouYin Favorites`, where `YYYY-MM-DD` is the current local date.
 3. Use a default batch size of 24 unless the user explicitly specifies another size. Observe only that bounded batch and record stable content IDs, canonical URLs, visible facts, and topic labels.
@@ -16,7 +18,7 @@ Never reorder these gates: `verify DEVONthink MCP → create fresh Inbox group �
 
 ## DEVONthink Setup
 
-Use only DEVONthink MCP tools such as `mcp__devonthink.get_databases`, `mcp__devonthink.get_record_children`, `mcp__devonthink.lookup_records`, `mcp__devonthink.create_record`, `mcp__devonthink.update_record`, and `mcp__devonthink.set_record_tags`.
+Use mapped DEVONthink MCP capabilities for database discovery, child listing, record lookup, record creation, record updates, and tag updates. Concrete names such as `mcp__devonthink.get_databases`, `mcp__devonthink.get_record_children`, `mcp__devonthink.lookup_records`, `mcp__devonthink.create_record`, `mcp__devonthink.update_record`, and `mcp__devonthink.set_record_tags` are examples only.
 
 Before reading Douyin favorites, confirm that DEVONthink MCP can list databases and that one available database has `is_inbox: true`. Use that Global Inbox database. If no writable Global Inbox is exposed, stop and report the blocker.
 
@@ -28,11 +30,11 @@ Create a fresh destination group with:
 
 The English phrase is fixed: `Archived DouYin Favorites`. Do not translate it differently, add time of day, or create a per-batch suffix. Do not reuse an existing same-day group from a prior invocation.
 
-Do not use `create_group_path` for this dated invocation group because that operation can behave like `mkdir -p` and return an existing group. Instead:
+Do not use an idempotent path-creation capability for this dated invocation group because it can behave like `mkdir -p` and return an existing group. `create_group_path` is one non-normative example of that unsafe semantic. Instead:
 
 1. List existing Global Inbox children with DEVONthink MCP before creation.
 2. If a group with the exact destination name already exists, stop and report that a fresh exact-name folder cannot be created safely.
-3. Create the group with `mcp__devonthink.create_record` using `type: "group"` and the exact destination name.
+3. Create the group with the mapped create-record capability (for example, `mcp__devonthink.create_record`) using `type: "group"` and the exact destination name.
 4. Verify the returned UUID was not present in the pre-creation same-name set.
 5. Use the returned group UUID as this invocation's destination and verification scope.
 
@@ -63,7 +65,7 @@ The bookmark name must be based on the video's main content, not only the author
 
 The URL must be either `https://www.douyin.com/video/<id>` or `https://www.douyin.com/note/<id>` and its `<id>` must match the archived content ID. Preserve the original Douyin link as the canonical URL; do not replace it with a search result, short link, author page, or reconstructed noncanonical URL.
 
-Before creating a bookmark, use `lookup_records` by URL to identify prior archives. Because each invocation uses a fresh group, do not update older records from another group as this run's output. If the same URL already exists in this invocation's fresh group, update that record's name, comment, URL, and tags instead of creating a duplicate. If the same URL exists elsewhere, create the fresh-group archive record unless the user explicitly asks to reuse or move older records.
+Before creating a bookmark, use the mapped record-lookup capability by URL to identify prior archives (`lookup_records` is a non-normative example). Because each invocation uses a fresh group, do not update older records from another group as this run's output. If the same URL already exists in this invocation's fresh group, update that record's name, comment, URL, and tags instead of creating a duplicate. If the same URL exists elsewhere, create the fresh-group archive record unless the user explicitly asks to reuse or move older records.
 
 Use the DEVONthink record comment field as the Finder Comment equivalent. The comment should include:
 
@@ -86,7 +88,7 @@ Before any destructive action, count bookmark records, archived IDs, canonical U
 
 ## Summary Markdown Record
 
-After bookmark verification and any requested cleanup attempt, use `mcp__devonthink.create_record` with `type: "markdown"` to create one Markdown record in the same DEVONthink folder. The summary file name and body must be written in Simplified Chinese by default. Preserve fixed identifiers such as DouYin, DEVONthink, UUIDs, canonical URLs, and tag strings exactly when needed. Keep content IDs for verification, record comments, unresolved notes, and exact cleanup matching, but do not expose them as a separate column in the archived-favorites list.
+After bookmark verification and any requested cleanup attempt, use the mapped create-record capability (for example, `mcp__devonthink.create_record`) with `type: "markdown"` to create one Markdown record in the same DEVONthink folder. The summary file name and body must be written in Simplified Chinese by default. Preserve fixed identifiers such as DouYin, DEVONthink, UUIDs, canonical URLs, and tag strings exactly when needed. Keep content IDs for verification, record comments, unresolved notes, and exact cleanup matching, but do not expose them as a separate column in the archived-favorites list.
 
 Use a Chinese record name like:
 
@@ -109,6 +111,8 @@ All headings, synthesis, evidence-limit notes, processing status, table labels, 
 Do not include a `内容 ID` or `Content ID` column in the archived-favorites table/list. If an item has sparse metadata or later needs cleanup, mention its content ID only in verification, unresolved-metadata notes, record comments, or exact cleanup notes.
 
 Verify the summary record exists in the same destination group and that its content covers every archived bookmark before reporting completion. At minimum, verify summary item count, content ID count, canonical URL count, unique canonical URL count, tag coverage, Chinese-language summary text, processing status, cleanup status, and unresolved/sparse metadata notes against the bookmark archive. A cross-item synthesis inside comments or chat is not a substitute for this Markdown record.
+
+If summary creation or verification fails, preserve verified bookmarks and cleanup state, report partial completion, and do not claim full completion.
 
 ## Cleanup Gate
 

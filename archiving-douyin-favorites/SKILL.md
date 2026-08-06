@@ -7,11 +7,14 @@ description: Use when explicitly invoked for a signed-in user's Douyin favorites
 
 ## Manual-Only Operation
 
-Run this Skill only when the user explicitly invokes `$archiving-douyin-favorites`. Do not infer invocation from a related request, resume it for an unrelated request, or continue after the user says not to continue.
+Run this Skill only when the user explicitly names or invokes this skill through the current host. Do not require a particular invocation syntax.
 
-Require an available browser already signed in to Douyin. Never attempt to bypass login, CAPTCHA, access controls, rate limits, or other platform safeguards. If the signed-in session is unavailable or a challenge blocks access, stop and report the blocker.
+## Required Capabilities
 
-Require the DEVONthink MCP server and tools before observing favorites. Use DEVONthink MCP tools only; never modify DEVONthink database packages directly, and do not use local Markdown, AppleScript, Finder, browser bookmarks, or any other fallback when DEVONthink MCP is unavailable.
+- authenticated browser automation that can inspect and operate the signed-in Douyin session, match stable content IDs, inspect the final dialog, reload, and perform delayed verification.
+- DEVONthink MCP operations that can discover Global Inbox and create, look up, update, tag, and verify groups and records.
+
+Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if either required capability is unavailable; do not offer a reduced fallback.
 
 Before observing or acting on favorites, read [references/workflow.md](references/workflow.md) completely and follow every checklist item.
 
