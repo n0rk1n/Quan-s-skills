@@ -163,13 +163,15 @@ class BilibiliPortabilityTests(unittest.TestCase):
         self.assertNotIn("$archiving-bilibili-favorites", skill)
         self.assertIn("explicitly names or invokes this skill", skill)
 
-    def test_required_capabilities_and_fixed_batch_are_explicit(self) -> None:
+    def test_required_capabilities_and_variable_batch_are_explicit(self) -> None:
         skill = read("archiving-bilibili-favorites/SKILL.md")
 
         self.assertIn("authenticated browser automation", skill)
         self.assertIn("DEVONthink MCP", skill)
         self.assertIn("Stop before observing favorites", skill)
-        self.assertIn("exactly one bounded batch of 40", skill)
+        self.assertIn("one bounded batch of up to 40", skill)
+        self.assertIn("batch_size = min(40, available_stable_items)", skill)
+        self.assertIn("If `batch_size` is 1–39, continue", skill)
 
     def test_openai_prompt_does_not_define_core_invocation_syntax(self) -> None:
         metadata = read("archiving-bilibili-favorites/agents/openai.yaml")
