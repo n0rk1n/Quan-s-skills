@@ -21,9 +21,10 @@ Skill. Never claim an exact context-use percentage.
 ## Required Inputs
 
 1. Resolve the current project or task worktree and obey all injected project,
-   Git, and worktree instructions. Default to `<root>/oriki-handoffs/`. Create the
-   directory when it does not exist. Existing `<root>/.codex/handoffs/` snapshots
-   remain readable through the resume skill but do not change this publishing path.
+   Git, and worktree instructions. Default to `<root>/.oriki/handoffs/`. Create the
+   directory when it does not exist. Existing `<root>/oriki-handoffs/` and
+   `<root>/.codex/handoffs/` snapshots remain readable through the resume skill but
+   do not change this publishing path.
    Ask for a root only when it is genuinely ambiguous or unwritable. Never infer the project root from `SKILL_DIR`
    or from the location of this Skill, its template, or its validator.
 2. If `LATEST.md` exists, resolve only a relative target inside the same
@@ -39,6 +40,17 @@ Skill. Never claim an exact context-use percentage.
 4. Gather the current conversation plus relevant live evidence. Recheck
    mutable Git, file, test, deployment, CI, permission, connection, and
    external state in proportion to its effect on the next action.
+
+## Handoff Location Contract
+
+| Purpose | Location |
+| --- | --- |
+| New snapshots and `LATEST.md` | `<root>/.oriki/handoffs/` |
+| First legacy read fallback | `<root>/oriki-handoffs/` |
+| Second legacy read fallback | `<root>/.codex/handoffs/` |
+
+Only the first location is a publishing target. Legacy directories are never
+rewritten merely because a new snapshot is published.
 
 ## Fact Contract
 
@@ -62,7 +74,7 @@ Use `references/handoff-template.md` and replace every token.
 ## Publish Workflow
 
 Let `SKILL_DIR` be this Skill directory and `HANDOFF_DIR` the resolved
-`<root>/oriki-handoffs/` directory.
+`<root>/.oriki/handoffs/` directory.
 
 If publication tools or file writes are unavailable but the user explicitly
 asks for handoff content, return a complete candidate snapshot using every template section.
@@ -126,4 +138,6 @@ delete the source conversation.
 - Inventing a plausible source reference or retaining a pasted credential.
 - Publishing before validation or replacing the last valid index after a
   partial failure.
+- Writing a new snapshot into a legacy `oriki-handoffs/` or `.codex/handoffs/`
+  directory.
 - Claiming success without an absolute snapshot path and validated index.
