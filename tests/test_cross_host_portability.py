@@ -6,9 +6,31 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS_ROOT = ROOT / "skills"
+
+SKILL_CATEGORIES = {
+    "adding-bilibili-covers-to-devonthink": "bilibili",
+    "archiving-bilibili-favorites": "bilibili",
+    "archiving-bilibili-following": "bilibili",
+    "archiving-douyin-favorites": "douyin",
+    "archiving-to-devonthink": "devonthink",
+    "creating-conversation-handoffs": "conversation",
+    "resuming-from-conversation-handoff": "conversation",
+}
+
+SKILLS = tuple(SKILL_CATEGORIES)
+
+
+def skill_dir(name: str) -> Path:
+    return SKILLS_ROOT / SKILL_CATEGORIES[name] / name
 
 
 def read(relative_path: str) -> str:
+    name, *remainder = relative_path.split("/", 1)
+    if name in SKILL_CATEGORIES:
+        relative_path = str(skill_dir(name).relative_to(ROOT))
+        if remainder:
+            relative_path = f"{relative_path}/{remainder[0]}"
     return (ROOT / relative_path).read_text(encoding="utf-8")
 
 
@@ -182,7 +204,7 @@ class BilibiliPortabilityTests(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    (ROOT / "archiving-bilibili-following/SKILL.md").is_file(),
+    (skill_dir("archiving-bilibili-following") / "SKILL.md").is_file(),
     "archiving-bilibili-following has not been created yet",
 )
 class BilibiliFollowingContractTests(unittest.TestCase):
@@ -230,22 +252,12 @@ class BilibiliFollowingContractTests(unittest.TestCase):
         self.assertIn("Use the archiving-bilibili-following skill", metadata)
 
 
-SKILLS = (
-    "archiving-to-devonthink",
-    "archiving-douyin-favorites",
-    "archiving-bilibili-favorites",
-    "archiving-bilibili-following",
-    "creating-conversation-handoffs",
-    "resuming-from-conversation-handoff",
-)
-
-
 class SkillStructureTests(unittest.TestCase):
     def test_frontmatter_has_recognized_required_fields(self) -> None:
         for name in SKILLS:
             with self.subTest(skill=name):
                 self.assertTrue(
-                    (ROOT / name / "SKILL.md").is_file(),
+                    (skill_dir(name) / "SKILL.md").is_file(),
                     f"missing skill: {name}",
                 )
                 fields = parse_frontmatter(read(f"{name}/SKILL.md"))
@@ -275,7 +287,7 @@ class SkillStructureTests(unittest.TestCase):
     def test_relative_markdown_links_resolve_inside_each_skill(self) -> None:
         link_pattern = re.compile(r"\[[^]]+\]\(([^)]+)\)")
         for name in SKILLS:
-            skill_root = (ROOT / name).resolve()
+            skill_root = skill_dir(name).resolve()
             for markdown_path in skill_root.rglob("*.md"):
                 for target in link_pattern.findall(markdown_path.read_text(encoding="utf-8")):
                     if (
@@ -332,6 +344,14 @@ class ReadmePortabilityTests(unittest.TestCase):
         self.assertIn("~/.config/opencode/skills", text)
         for name in SKILLS:
             self.assertIn(f"`{name}`", text)
+
+    def test_skill_categories_are_documented_and_match_the_repository(self) -> None:
+        text = read("README.md")
+
+        for name, category in SKILL_CATEGORIES.items():
+            with self.subTest(skill=name):
+                self.assertIn(f"skills/{category}/{name}", text)
+                self.assertTrue((skill_dir(name) / "SKILL.md").is_file())
 
     def test_readme_explains_capabilities_and_optional_metadata(self) -> None:
         text = read("README.md")

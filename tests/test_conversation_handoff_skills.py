@@ -6,8 +6,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GENERATOR = ROOT / "creating-conversation-handoffs"
-READER = ROOT / "resuming-from-conversation-handoff"
+SKILLS_ROOT = ROOT / "skills" / "conversation"
+GENERATOR = SKILLS_ROOT / "creating-conversation-handoffs"
+READER = SKILLS_ROOT / "resuming-from-conversation-handoff"
 
 
 def read_or_empty(path: Path) -> str:

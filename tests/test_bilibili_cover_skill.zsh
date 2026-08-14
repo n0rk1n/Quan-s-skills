@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root="${0:A:h:h}"
-script="$repo_root/adding-bilibili-covers-to-devonthink/scripts/process-bilibili-covers.zsh"
+script="$repo_root/skills/bilibili/adding-bilibili-covers-to-devonthink/scripts/process-bilibili-covers.zsh"
 test_dir="$(mktemp -d /tmp/test-bilibili-cover-skill.XXXXXX)"
 trap 'rm -rf "$test_dir"' EXIT
 

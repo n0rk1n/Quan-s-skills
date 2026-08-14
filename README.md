@@ -4,12 +4,17 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 
 ## Skills
 
-- `archiving-to-devonthink`: Archive an AI conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record.
-- `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup.
-- `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40.
-- `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24.
-- `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.oriki/handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `oriki-handoffs/` and `.codex/handoffs/` indexes remain readable.
-- `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work.
+Skills are grouped by subject under `skills/`; every leaf directory is a complete, independently installable skill.
+
+| Category | Repository path | Skill |
+| --- | --- | --- |
+| DEVONthink | `skills/devonthink/archiving-to-devonthink` | `archiving-to-devonthink`: Archive an AI conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record. |
+| Bilibili | `skills/bilibili/adding-bilibili-covers-to-devonthink` | `adding-bilibili-covers-to-devonthink`: Add paired cover records for Bilibili video bookmarks in DEVONthink. |
+| Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40. |
+| Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24. |
+| Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup. |
+| Conversation | `skills/conversation/creating-conversation-handoffs` | `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.oriki/handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `oriki-handoffs/` and `.codex/handoffs/` indexes remain readable. |
+| Conversation | `skills/conversation/resuming-from-conversation-handoff` | `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work. |
 
 ## Required Capabilities
 
@@ -47,21 +52,21 @@ Clone this repository:
 git clone https://github.com/n0rk1n/Quan-s-skills.git
 ```
 
-Copy a skill into Codex's local skills directory:
+Copy a complete skill directory into Codex's local skills directory. The destination stays flat: `SKILL.md` must be at `~/.codex/skills/<name>/SKILL.md`.
 
 ```sh
 mkdir -p ~/.codex/skills
-cp -R Quan-s-skills/<name> ~/.codex/skills/
+cp -R Quan-s-skills/skills/<category>/<name> ~/.codex/skills/
 ```
 
-Replace `<name>` with one of: `archiving-to-devonthink`, `archiving-douyin-favorites`, `archiving-bilibili-favorites`, `archiving-bilibili-following`, `creating-conversation-handoffs`, `resuming-from-conversation-handoff`.
+Use the category shown in the table above; for example, `skills/conversation/creating-conversation-handoffs`.
 
 To update an existing install:
 
 ```sh
 git -C Quan-s-skills pull
 rm -rf ~/.codex/skills/<name>
-cp -R Quan-s-skills/<name> ~/.codex/skills/
+cp -R Quan-s-skills/skills/<category>/<name> ~/.codex/skills/
 ```
 
 ## Install for OpenCode
@@ -70,7 +75,7 @@ Clone this repository as shown above, then copy a skill into OpenCode's skill di
 
 ```sh
 mkdir -p ~/.config/opencode/skills
-cp -R Quan-s-skills/<name> ~/.config/opencode/skills/<name>
+cp -R Quan-s-skills/skills/<category>/<name> ~/.config/opencode/skills/<name>
 ```
 
 OpenCode discovers the skill and loads it through its native `skill` tool. Users may explicitly name the skill in their request.
