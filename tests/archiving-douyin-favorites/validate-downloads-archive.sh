@@ -4,6 +4,7 @@ set -euo pipefail
 
 repo_root="${0:A:h:h:h}"
 skill_dir="$repo_root/skills/douyin/archiving-douyin-favorites"
+archive_script="$skill_dir/scripts/archive_douyin_favorites.py"
 
 if rg -n -i 'DEVONthink' "$skill_dir"; then
   print -u2 "FAIL: douyin skill still contains DEVONthink-specific behavior"
@@ -26,5 +27,11 @@ rg -q 'writable local filesystem' "$skill_dir/SKILL.md"
 
 rg -q 'verified local archive|本地归档' "$skill_dir/SKILL.md" \
   "$skill_dir/references/workflow.md"
+
+test -x "$archive_script"
+python3 "$archive_script" --help >/dev/null
+rg -q 'scripts/archive_douyin_favorites\.py' \
+  "$skill_dir/SKILL.md" "$skill_dir/references/workflow.md" "$skill_dir/agents/openai.yaml"
+rg -q 'verified_ids' "$skill_dir/references/workflow.md"
 
 print "PASS: douyin skill uses verified Downloads page links and matching detail files without a standalone summary"

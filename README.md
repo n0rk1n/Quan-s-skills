@@ -28,6 +28,7 @@ They stop safely before observing the source list if either capability is unavai
 
 - Authenticated browser automation with the same exact-ID and delayed-removal verification safeguards.
 - Writable local filesystem access to `/Users/oriki/Downloads` for the dated archive directory, `.webloc` page links, and matching detail Markdown files.
+- Python 3 for the bundled `scripts/archive_douyin_favorites.py` writer and read-back verifier.
 
 It stops safely before observing favorites if either capability is unavailable.
 

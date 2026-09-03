@@ -20,6 +20,7 @@ Pass criteria:
 
 - Uses a batch size of 24.
 - Uses `/Users/oriki/Downloads/2026-09-03 Archived DouYin Favorites`.
+- Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input without saving a manifest in the archive directory.
 - Writes one `.webloc` and one matching `详情.md` file per stable content ID.
 - Preserves canonical `/video/<id>` or `/note/<id>` URLs and all visible context in the detail files.
 
@@ -40,7 +41,7 @@ Twenty favorites were observed, but only 20 `.webloc` files and 19 matching `详
 
 Pass criteria:
 
-- Does not unfavorite any item yet.
+- Requires script exit code 0, so it does not unfavorite any item yet.
 - Repairs or reports the incomplete pair before cleanup.
 - Requires one-to-one agreement among browser evidence, filenames, link contents, and metadata.
 
@@ -73,4 +74,4 @@ Run:
 zsh tests/archiving-douyin-favorites/validate-downloads-archive.sh
 ```
 
-It must confirm that the installed skill contains no legacy integration references, defines the Downloads destination, requires `.webloc` plus matching detail Markdown, omits a standalone summary file, and preserves the verified-local-archive cleanup gate.
+It must confirm that the installed skill contains no legacy integration references, defines the Downloads destination, invokes the bundled archive script, requires `.webloc` plus matching detail Markdown, omits a standalone summary file, and preserves the verified-local-archive cleanup gate.

@@ -147,6 +147,8 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertIn("/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites", workflow)
         self.assertIn(".webloc", workflow)
         self.assertIn("详情.md", workflow)
+        self.assertIn("scripts/archive_douyin_favorites.py", workflow)
+        self.assertIn("verified_ids", workflow)
         self.assertNotIn("DEVONthink", workflow)
 
     def test_standalone_summary_file_is_not_required(self) -> None:

@@ -34,3 +34,18 @@ The workflow now uses one stable local shape for every favorite:
 ```
 
 The stable content ID prevents filename collisions and enables safe same-day folder reuse. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
+
+## Script Extraction Cycle
+
+The next RED run added six tests for a bundled local archive writer. All six failed because `scripts/archive_douyin_favorites.py` did not exist.
+
+The GREEN implementation now:
+
+- validates the full JSON batch before creating the destination;
+- generates XML `.webloc` and Chinese `详情.md` files;
+- reuses only an unambiguous existing ID/URL pair;
+- preserves unrelated files and rejects incomplete/conflicting pairs;
+- writes atomically and reads each pair back; and
+- returns `verified_ids`, `failed_items`, `pairs_written`, and the destination as JSON.
+
+The focused script suite passes 6 tests. The Skill delegates deterministic file work to the script while retaining page interpretation, exact-ID selection, final-dialog inspection, and delayed cleanup verification in the agent workflow.
