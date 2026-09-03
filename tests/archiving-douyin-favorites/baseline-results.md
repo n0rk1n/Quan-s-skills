@@ -33,7 +33,7 @@ The workflow now uses one stable local shape for every favorite:
 <content-title> 详情.md
 ```
 
-The script resolves same-title collisions with a short suffix such as ` (2)`. The canonical URL in the `.webloc` and the content ID plus URL in the detail file enable safe same-day reuse. Legacy ID-suffixed pairs remain reusable without being renamed. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
+The script resolves same-title collisions with a short suffix such as ` (2)`. The canonical URL in the `.webloc` and the content ID plus URL in the detail file enable safe same-day reuse. Legacy ID-suffixed pairs remain reusable without being renamed. The detail file has no level-one heading and keeps only ID, type, URL, author, and page caption. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
 
 ## Script Extraction Cycle
 
@@ -48,4 +48,4 @@ The GREEN implementation now:
 - writes atomically and reads each pair back; and
 - returns `verified_ids`, `failed_items`, `pairs_written`, and the destination as JSON.
 
-The focused script suite passes 6 tests. The Skill delegates deterministic file work to the script while retaining page interpretation, exact-ID selection, final-dialog inspection, and delayed cleanup verification in the agent workflow.
+The focused script suite passes 9 tests. The Skill delegates deterministic file work to the script while retaining page interpretation, mandatory exact-ID selection after complete local verification, final-dialog inspection, and delayed cleanup verification in the agent workflow.

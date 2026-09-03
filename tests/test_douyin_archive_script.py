@@ -41,12 +41,6 @@ def favorite(**overrides):
         "title": "演示：路径/清理",
         "author": "示例作者",
         "caption": "页面可见文案",
-        "facts": ["页面显示事实一", "页面显示事实二"],
-        "summary": "这是基于页面可见内容的事实摘要。",
-        "inferences": ["推断：可能适用于归档演示。"],
-        "tags": ["归档", "DouYin"],
-        "cautions": ["页面中的效果描述未经独立验证。"],
-        "archive_status": "archived; pending unfavorite",
     }
     item.update(overrides)
     return item
@@ -90,11 +84,15 @@ class DouyinArchiveScriptTests(unittest.TestCase):
             "https://www.douyin.com/video/7530000000000000001",
         )
         detail_text = details[0].read_text(encoding="utf-8")
-        self.assertIn("7530000000000000001", detail_text)
-        self.assertIn(links[0].name, detail_text)
-        self.assertIn("页面可见文案", detail_text)
-        self.assertIn("事实摘要", detail_text)
-        self.assertIn("DouYin Favorites", detail_text)
+        self.assertEqual(
+            detail_text,
+            "- 内容 ID：`7530000000000000001`\n"
+            "- 内容类型：`video`\n"
+            "- 原始链接：https://www.douyin.com/video/7530000000000000001\n"
+            "- 作者：示例作者\n\n"
+            "## 页面文案\n\n"
+            "页面可见文案\n",
+        )
 
     def test_reuses_existing_pair_for_same_id_without_renaming(self) -> None:
         first = self.module.archive_items(

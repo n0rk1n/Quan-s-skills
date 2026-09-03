@@ -42,4 +42,12 @@ rg -q 'scripts/archive_douyin_favorites\.py' \
   "$skill_dir/SKILL.md" "$skill_dir/references/workflow.md" "$skill_dir/agents/openai.yaml"
 rg -q 'verified_ids' "$skill_dir/references/workflow.md"
 
+if rg -n -F 'If cleanup is requested' "$skill_dir"; then
+  print -u2 "FAIL: verified Douyin cleanup is still optional"
+  exit 1
+fi
+
+rg -q -F 'Unfavorite the exact verified archived IDs' \
+  "$skill_dir/references/workflow.md"
+
 print "PASS: douyin skill uses verified Downloads page links and matching detail files without a standalone summary"

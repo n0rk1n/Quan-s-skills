@@ -13,7 +13,7 @@ import tempfile
 import unicodedata
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 DEFAULT_DOWNLOADS_ROOT = Path("/Users/oriki/Downloads")
@@ -34,15 +34,6 @@ def _require_text(item: dict[str, Any], key: str) -> str:
     return str(value).strip()
 
 
-def _text_list(item: dict[str, Any], key: str) -> list[str]:
-    value = item.get(key, [])
-    if value is None:
-        return []
-    if not isinstance(value, list) or any(not isinstance(entry, str) for entry in value):
-        raise ValueError(f"{key} must be a list of strings")
-    return [entry.strip() for entry in value if entry.strip()]
-
-
 def _validate_item(raw_item: Any) -> dict[str, Any]:
     if not isinstance(raw_item, dict):
         raise ValueError("each item must be a JSON object")
@@ -59,9 +50,6 @@ def _validate_item(raw_item: Any) -> dict[str, Any]:
         raise ValueError(f"{content_id}: URL content type does not match")
 
     title = _require_text(raw_item, "title") or "DouYin 收藏"
-    tags = ["DouYin", "DouYin Favorites", *_text_list(raw_item, "tags")]
-    tags = list(dict.fromkeys(tags))
-
     return {
         "id": content_id,
         "type": content_type,
@@ -69,14 +57,6 @@ def _validate_item(raw_item: Any) -> dict[str, Any]:
         "title": title,
         "author": _require_text(raw_item, "author") or "insufficient metadata",
         "caption": _require_text(raw_item, "caption") or "insufficient metadata",
-        "facts": _text_list(raw_item, "facts"),
-        "summary": _require_text(raw_item, "summary") or "insufficient metadata",
-        "inferences": _text_list(raw_item, "inferences"),
-        "tags": tags,
-        "cautions": _text_list(raw_item, "cautions"),
-        "archive_status": (
-            _require_text(raw_item, "archive_status") or "archived; pending unfavorite"
-        ),
     }
 
 
@@ -110,31 +90,14 @@ def _safe_title(title: str, max_length: int = 80) -> str:
     return (normalized[:max_length].rstrip(" .-") or "DouYin 收藏")
 
 
-def _list_markdown(values: Iterable[str], empty: str = "insufficient metadata") -> str:
-    entries = list(values)
-    return "\n".join(f"- {entry}" for entry in entries) if entries else f"- {empty}"
-
-
-def _render_detail(item: dict[str, Any], link_name: str) -> str:
+def _render_detail(item: dict[str, Any]) -> str:
     return (
-        f"# {item['title']}\n\n"
         f"- 内容 ID：`{item['id']}`\n"
         f"- 内容类型：`{item['type']}`\n"
         f"- 原始链接：{item['url']}\n"
-        f"- 页面文件：`{link_name}`\n"
-        f"- 作者：{item['author']}\n"
-        f"- 标签：{', '.join(item['tags'])}\n"
-        f"- 归档状态：{item['archive_status']}\n\n"
+        f"- 作者：{item['author']}\n\n"
         "## 页面文案\n\n"
-        f"{item['caption']}\n\n"
-        "## 可见事实\n\n"
-        f"{_list_markdown(item['facts'])}\n\n"
-        "## 事实摘要\n\n"
-        f"{item['summary']}\n\n"
-        "## 推断\n\n"
-        f"{_list_markdown(item['inferences'], '无')}\n\n"
-        "## 风险提示\n\n"
-        f"{_list_markdown(item['cautions'], '无')}\n"
+        f"{item['caption']}\n"
     )
 
 
@@ -222,9 +185,9 @@ def _verify_pair(link_path: Path, detail_path: Path, item: dict[str, Any]) -> No
         raise ValueError("written pair cannot be read back") from exc
     if link_url != item["url"]:
         raise ValueError("written page link URL mismatch")
-    required_detail_values = (item["id"], item["url"], link_path.name)
+    required_detail_values = (item["id"], item["url"])
     if any(value not in detail for value in required_detail_values):
-        raise ValueError("written detail file is missing ID, URL, or page filename")
+        raise ValueError("written detail file is missing ID or URL")
 
 
 def archive_items(
@@ -253,7 +216,7 @@ def archive_items(
             link_content = plistlib.dumps(
                 {"URL": item["url"]}, fmt=plistlib.FMT_XML, sort_keys=True
             )
-            detail_content = _render_detail(item, link_path.name).encode("utf-8")
+            detail_content = _render_detail(item).encode("utf-8")
             _atomic_write(link_path, link_content)
             _atomic_write(detail_path, detail_content)
             _verify_pair(link_path, detail_path, item)

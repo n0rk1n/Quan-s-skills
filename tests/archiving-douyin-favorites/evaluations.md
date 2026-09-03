@@ -23,7 +23,8 @@ Pass criteria:
 - Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input or with `--input`, without saving a manifest in the archive directory.
 - Writes one `.webloc` and one matching `详情.md` file per stable content ID.
 - Names each new pair from its concise title without `--<content-id>`; uses ` (2)`, ` (3)`, and so on only when safe titles collide.
-- Preserves canonical `/video/<id>` or `/note/<id>` URLs and all visible context in the detail files.
+- Preserves only ID, type, canonical URL, author, and page caption in each detail file, with no level-one heading or extra sections.
+- Unfavorites the exact complete `verified_ids` batch after local verification, then reloads for delayed verification.
 
 ## Scenario: existing daily folder
 
