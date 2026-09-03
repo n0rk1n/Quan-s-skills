@@ -92,12 +92,11 @@ def _safe_title(title: str, max_length: int = 80) -> str:
 
 def _render_detail(item: dict[str, Any]) -> str:
     return (
-        f"- 内容 ID：`{item['id']}`\n"
-        f"- 内容类型：`{item['type']}`\n"
-        f"- 原始链接：{item['url']}\n"
+        f"- 内容 ID：`{item['id']}`\n\n"
+        f"- 内容类型：`{item['type']}`\n\n"
+        f"- 原始链接：{item['url']}\n\n"
         f"- 作者：{item['author']}\n\n"
-        "## 页面文案\n\n"
-        f"{item['caption']}\n"
+        f"- 页面文案：{item['caption']}\n"
     )
 
 

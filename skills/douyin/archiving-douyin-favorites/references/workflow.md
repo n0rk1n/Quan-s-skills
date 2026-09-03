@@ -99,13 +99,13 @@ Its `<id>` must match the archived content ID recorded in the detail file. The f
 
 The title must describe the favorite's main content, not only the author, ID, index, or generic text such as `DouYin Favorite 01`. Replace `/`, `:`, and other filename separators or control characters, trim trailing periods/spaces, and keep the title concise. If visible content is sparse, use the best visible label. Resolve a same-title collision with the short numeric suffix; never expose the long content ID in a new filename.
 
-The `详情.md` file has no level-one heading. It contains exactly these fields and no additional sections:
+The `详情.md` file has no headings. It contains exactly five list items, with one blank line between adjacent items:
 
 - content ID;
 - content type;
 - canonical URL;
 - visible author; and
-- a `## 页面文案` section containing the visible caption.
+- visible page caption.
 
 Write detail-file labels in Simplified Chinese. Preserve identifiers and URLs exactly, and label a missing author or caption as `insufficient metadata`.
 

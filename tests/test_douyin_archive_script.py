@@ -86,12 +86,11 @@ class DouyinArchiveScriptTests(unittest.TestCase):
         detail_text = details[0].read_text(encoding="utf-8")
         self.assertEqual(
             detail_text,
-            "- 内容 ID：`7530000000000000001`\n"
-            "- 内容类型：`video`\n"
-            "- 原始链接：https://www.douyin.com/video/7530000000000000001\n"
+            "- 内容 ID：`7530000000000000001`\n\n"
+            "- 内容类型：`video`\n\n"
+            "- 原始链接：https://www.douyin.com/video/7530000000000000001\n\n"
             "- 作者：示例作者\n\n"
-            "## 页面文案\n\n"
-            "页面可见文案\n",
+            "- 页面文案：页面可见文案\n",
         )
 
     def test_reuses_existing_pair_for_same_id_without_renaming(self) -> None:

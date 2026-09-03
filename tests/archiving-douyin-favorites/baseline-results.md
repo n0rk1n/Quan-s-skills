@@ -33,7 +33,7 @@ The workflow now uses one stable local shape for every favorite:
 <content-title> 详情.md
 ```
 
-The script resolves same-title collisions with a short suffix such as ` (2)`. The canonical URL in the `.webloc` and the content ID plus URL in the detail file enable safe same-day reuse. Legacy ID-suffixed pairs remain reusable without being renamed. The detail file has no level-one heading and keeps only ID, type, URL, author, and page caption. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
+The script resolves same-title collisions with a short suffix such as ` (2)`. The canonical URL in the `.webloc` and the content ID plus URL in the detail file enable safe same-day reuse. Legacy ID-suffixed pairs remain reusable without being renamed. The detail file has no headings and keeps only ID, type, URL, author, and page caption as five blank-line-separated list items. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
 
 ## Script Extraction Cycle
 
