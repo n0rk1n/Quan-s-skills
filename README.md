@@ -12,17 +12,24 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 | Bilibili | `skills/bilibili/adding-bilibili-covers-to-devonthink` | `adding-bilibili-covers-to-devonthink`: Add paired cover records for Bilibili video bookmarks in DEVONthink. |
 | Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40. |
 | Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24. |
-| Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into DEVONthink Global Inbox bookmark records with comments, tags, and a same-folder Markdown summary before any confirmed exact-ID cleanup. |
+| Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into a dated folder under `/Users/oriki/Downloads`, with one local page link and detail file per item plus a Chinese daily summary before any confirmed exact-ID cleanup. |
 | Conversation | `skills/conversation/creating-conversation-handoffs` | `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.oriki/handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `oriki-handoffs/` and `.codex/handoffs/` indexes remain readable. |
 | Conversation | `skills/conversation/resuming-from-conversation-handoff` | `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work. |
 
 ## Required Capabilities
 
-**Bilibili and Douyin list skills** (`archiving-douyin-favorites`, `archiving-bilibili-favorites`, `archiving-bilibili-following`) require:
+**Bilibili list skills** (`archiving-bilibili-favorites`, `archiving-bilibili-following`) require:
 - Authenticated browser automation that can inspect and operate the signed-in session, match stable content IDs, and verify removals.
 - DEVONthink MCP operations that can discover Global Inbox and create, look up, update, tag, and verify groups and records.
 
 They stop safely before observing the source list if either capability is unavailable.
+
+**Douyin favorites** (`archiving-douyin-favorites`) requires:
+
+- Authenticated browser automation with the same exact-ID and delayed-removal verification safeguards.
+- Writable local filesystem access to `/Users/oriki/Downloads` for the dated archive directory, `.webloc` page links, matching detail Markdown files, and the Chinese daily summary.
+
+It stops safely before observing favorites if either capability is unavailable.
 
 **Conversation archiving** (`archiving-to-devonthink`) requires:
 - Readable current conversation context (or an optional supported export source).

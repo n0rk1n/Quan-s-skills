@@ -134,25 +134,26 @@ class DouyinPortabilityTests(unittest.TestCase):
         skill = read("archiving-douyin-favorites/SKILL.md")
 
         self.assertIn("authenticated browser automation", skill)
-        self.assertIn("DEVONthink MCP", skill)
+        self.assertIn("writable local filesystem", skill)
+        self.assertIn("/Users/oriki/Downloads", skill)
+        self.assertNotIn("DEVONthink", skill)
         self.assertIn("map", skill.lower())
         self.assertIn("Stop before observing favorites", skill)
 
-    def test_tool_names_are_examples_not_requirements(self) -> None:
+    def test_local_artifact_contract_is_explicit(self) -> None:
         workflow = read("archiving-douyin-favorites/references/workflow.md")
 
         self.assertIn("semantic capability", workflow)
-        self.assertIn("non-normative examples", workflow)
-        self.assertIn("mcp__devonthink.create_record", workflow)
-        self.assertNotIn("use `mcp__devonthink.create_record`", workflow.lower())
-        self.assertNotIn("do not use `create_group_path`", workflow.lower())
-        self.assertNotIn("use `lookup_records`", workflow.lower())
+        self.assertIn("/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites", workflow)
+        self.assertIn(".webloc", workflow)
+        self.assertIn("详情.md", workflow)
+        self.assertNotIn("DEVONthink", workflow)
 
     def test_summary_failure_is_reported_as_partial_completion(self) -> None:
         workflow = read("archiving-douyin-favorites/references/workflow.md")
 
         self.assertIn("summary creation or verification fails", workflow)
-        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("preserve verified per-favorite files and cleanup state", workflow)
         self.assertIn("do not claim full completion", workflow)
 
 
@@ -332,7 +333,6 @@ class FavoritesSafetyContractTests(unittest.TestCase):
             with self.subTest(skill=name):
                 skill = read(f"{name}/SKILL.md")
                 self.assertIn("Stop before observing favorites", skill)
-                self.assertIn("do not offer a reduced fallback", skill)
 
 
 class ReadmePortabilityTests(unittest.TestCase):
@@ -385,6 +385,7 @@ class ScenarioCoverageTests(unittest.TestCase):
             "codex-all-capabilities",
             "opencode-all-capabilities",
             "missing-browser-automation",
+            "douyin-missing-downloads-access",
             "missing-devonthink-mcp",
             "missing-conversation-closing",
             "insufficient-conversation-context",
@@ -392,6 +393,7 @@ class ScenarioCoverageTests(unittest.TestCase):
             "conversation-missing-temporary-directory",
             "bilibili-partial-retry",
             "semantic-mcp-tool-names",
+            "semantic-local-file-capabilities",
             "summary-write-failure",
             "codex-handoff-generation",
             "opencode-handoff-generation",
@@ -430,6 +432,7 @@ class ScenarioCoverageTests(unittest.TestCase):
 
         for name in (
             "missing-browser-automation",
+            "douyin-missing-downloads-access",
             "missing-devonthink-mcp",
             "summary-write-failure",
         ):
