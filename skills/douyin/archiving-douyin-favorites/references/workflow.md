@@ -74,7 +74,7 @@ Use this exact daily directory:
 
 The English phrase is fixed: `Archived DouYin Favorites`. Replace only `YYYY-MM-DD` with the current local date. Do not redirect output to a repository, Desktop, temporary directory, iCloud, or another location.
 
-The script creates the directory if it does not exist and reuses it for the same day when safe. Never delete, truncate, rename, or overwrite an unrelated existing file. Stable content IDs in filenames make repeat invocations safe: the script updates the matching pair for the same content ID only after confirming its canonical URL and creates a new pair for a new ID.
+The script creates the directory if it does not exist and reuses it for the same day when safe. Never delete, truncate, rename, or overwrite an unrelated existing file. Repeat invocations identify an existing item through the canonical URL in its `.webloc` file and the matching content ID and URL in its detail file. Legacy pairs whose filenames contain `--<content-id>` remain readable and reusable, but new files never use that suffix.
 
 Stop before observing favorites if the destination cannot be created, listed, written, or read back. A successful write call alone is not verification.
 
@@ -89,9 +89,11 @@ Do not bypass login, CAPTCHA, access controls, rate limits, or platform safeguar
 The script turns each favorite into exactly two files in the dated folder, using the same filesystem-safe base name for both:
 
 ```text
-<concise-content-title>--<content-id>.webloc
-<concise-content-title>--<content-id> 详情.md
+<concise-content-title>.webloc
+<concise-content-title> 详情.md
 ```
+
+If another item already uses the same safe title, append a short numeric suffix to both files, beginning with ` (2)`, then ` (3)`, while keeping their base names identical.
 
 The `.webloc` file is an XML property list whose `URL` value is exactly one canonical URL:
 
@@ -100,9 +102,9 @@ https://www.douyin.com/video/<id>
 https://www.douyin.com/note/<id>
 ```
 
-Its `<id>` must match the filename and archived content ID. Do not replace the original Douyin URL with a search result, short link, author page, or reconstructed noncanonical URL.
+Its `<id>` must match the archived content ID recorded in the detail file. The filename does not contain the content ID. Do not replace the original Douyin URL with a search result, short link, author page, or reconstructed noncanonical URL.
 
-The title must describe the favorite's main content, not only the author, ID, index, or generic text such as `DouYin Favorite 01`. Replace `/`, `:`, and other filename separators or control characters, trim trailing periods/spaces, and keep the title concise. If visible content is sparse, use the best visible label plus the mandatory content-ID suffix.
+The title must describe the favorite's main content, not only the author, ID, index, or generic text such as `DouYin Favorite 01`. Replace `/`, `:`, and other filename separators or control characters, trim trailing periods/spaces, and keep the title concise. If visible content is sparse, use the best visible label. Resolve a same-title collision with the short numeric suffix; never expose the long content ID in a new filename.
 
 The `详情.md` file stores all structured context that must remain available locally:
 
@@ -118,7 +120,7 @@ The `详情.md` file stores all structured context that must remain available lo
 
 Write detail-file text in Simplified Chinese by default. Preserve fixed identifiers, URLs, filenames, and tag strings exactly when needed.
 
-Before cleanup, require the archive script's exit code 0 and compare its `verified_ids` with the browser-observed batch IDs. Preserve a one-to-one ID/URL mapping: every current-batch ID must map to exactly one readable `.webloc` and one readable metadata file, and the URL and ID must agree across browser evidence, filename, link file, and metadata. The verified count must equal the batch size. Stop on any mismatch.
+Before cleanup, require the archive script's exit code 0 and compare its `verified_ids` with the browser-observed batch IDs. Preserve a one-to-one ID/URL mapping: every current-batch ID must map to exactly one readable `.webloc` and one readable metadata file with the same base name, and the URL and ID must agree across browser evidence, link file, and metadata. The verified count must equal the batch size. Stop on any mismatch.
 
 Label visible facts as facts. Clearly mark any synthesis, takeaway, interpretation, or inferred context as inference, and do not invent missing details. Add explicit caution rather than endorsement when recording medical, financial, benchmark, income, popularity, or product claims; visible engagement counts and creator assertions are not independent verification.
 
@@ -178,8 +180,9 @@ When the user says not to continue, stop before collecting or acting on another 
 - Reimplementing filename, write, or verification logic instead of using the bundled script.
 - Treating exit code 1, `failed_items`, or a partial `verified_ids` list as permission to clean up.
 - Writing only `.webloc` links instead of a complete pair per favorite.
+- Adding `--<content-id>` or another long content-ID suffix to a new filename.
 - Overwriting unrelated files already present in the daily directory.
-- Naming files by index or author only instead of main content plus stable content ID.
+- Naming files by index or author only instead of the main content title.
 - Putting details in chat only instead of the matching detail file.
 - Unfavoriting first because cached data appears sufficient to rebuild the archive.
 - Selecting “the first N cards” instead of matching archived content IDs.

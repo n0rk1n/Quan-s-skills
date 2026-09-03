@@ -156,22 +156,62 @@ def _existing_base(destination: Path, item: dict[str, Any]) -> str | None:
     content_id = item["id"]
     links = list(destination.glob(f"*--{content_id}.webloc"))
     details = list(destination.glob(f"*--{content_id}{DETAIL_SUFFIX}"))
-    if not links and not details:
+    if links or details:
+        if len(links) != 1 or len(details) != 1:
+            raise ValueError("incomplete existing pair or ambiguous files")
+
+        link_base = links[0].name[: -len(".webloc")]
+        detail_base = details[0].name[: -len(DETAIL_SUFFIX)]
+        if link_base != detail_base:
+            raise ValueError("incomplete existing pair or mismatched filenames")
+        try:
+            existing_url = plistlib.loads(links[0].read_bytes()).get("URL")
+        except (OSError, plistlib.InvalidFileException, AttributeError) as exc:
+            raise ValueError("existing page link is unreadable") from exc
+        if existing_url != item["url"]:
+            raise ValueError("existing pair URL conflicts with content ID")
+        return link_base
+
+    matching_links: list[Path] = []
+    for link in destination.glob("*.webloc"):
+        try:
+            if plistlib.loads(link.read_bytes()).get("URL") == item["url"]:
+                matching_links.append(link)
+        except (OSError, plistlib.InvalidFileException, AttributeError):
+            continue
+
+    matching_details: list[Path] = []
+    for detail in destination.glob(f"*{DETAIL_SUFFIX}"):
+        try:
+            detail_text = detail.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        if content_id in detail_text and item["url"] in detail_text:
+            matching_details.append(detail)
+
+    if not matching_links and not matching_details:
         return None
-    if len(links) != 1 or len(details) != 1:
+    if len(matching_links) != 1 or len(matching_details) != 1:
         raise ValueError("incomplete existing pair or ambiguous files")
 
-    link_base = links[0].name[: -len(".webloc")]
-    detail_base = details[0].name[: -len(DETAIL_SUFFIX)]
+    link_base = matching_links[0].name[: -len(".webloc")]
+    detail_base = matching_details[0].name[: -len(DETAIL_SUFFIX)]
     if link_base != detail_base:
         raise ValueError("incomplete existing pair or mismatched filenames")
-    try:
-        existing_url = plistlib.loads(links[0].read_bytes()).get("URL")
-    except (OSError, plistlib.InvalidFileException, AttributeError) as exc:
-        raise ValueError("existing page link is unreadable") from exc
-    if existing_url != item["url"]:
-        raise ValueError("existing pair URL conflicts with content ID")
     return link_base
+
+
+def _available_base(destination: Path, title: str) -> str:
+    base = _safe_title(title)
+    candidate = base
+    suffix = 2
+    while (
+        (destination / f"{candidate}.webloc").exists()
+        or (destination / f"{candidate}{DETAIL_SUFFIX}").exists()
+    ):
+        candidate = f"{base} ({suffix})"
+        suffix += 1
+    return candidate
 
 
 def _verify_pair(link_path: Path, detail_path: Path, item: dict[str, Any]) -> None:
@@ -206,7 +246,7 @@ def archive_items(
         try:
             base = _existing_base(destination, item)
             if base is None:
-                base = f"{_safe_title(item['title'])}--{item['id']}"
+                base = _available_base(destination, item["title"])
             link_path = destination / f"{base}.webloc"
             detail_path = destination / f"{base}{DETAIL_SUFFIX}"
 

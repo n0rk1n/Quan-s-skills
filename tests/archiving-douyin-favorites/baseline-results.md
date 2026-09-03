@@ -29,11 +29,11 @@ Manual review of the evaluation scenarios confirmed that the exact-ID selection,
 The workflow now uses one stable local shape for every favorite:
 
 ```text
-<content-title>--<content-id>.webloc
-<content-title>--<content-id> 详情.md
+<content-title>.webloc
+<content-title> 详情.md
 ```
 
-The stable content ID prevents filename collisions and enables safe same-day folder reuse. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
+The script resolves same-title collisions with a short suffix such as ` (2)`. The canonical URL in the `.webloc` and the content ID plus URL in the detail file enable safe same-day reuse. Legacy ID-suffixed pairs remain reusable without being renamed. A current-batch item is complete only when both its `.webloc` and matching `详情.md` file pass read-back verification; no separate aggregate Markdown file is created.
 
 ## Script Extraction Cycle
 

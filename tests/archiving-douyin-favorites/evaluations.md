@@ -22,6 +22,7 @@ Pass criteria:
 - Uses `/Users/oriki/Downloads/2026-09-03 Archived DouYin Favorites`.
 - Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input or with `--input`, without saving a manifest in the archive directory.
 - Writes one `.webloc` and one matching `详情.md` file per stable content ID.
+- Names each new pair from its concise title without `--<content-id>`; uses ` (2)`, ` (3)`, and so on only when safe titles collide.
 - Preserves canonical `/video/<id>` or `/note/<id>` URLs and all visible context in the detail files.
 
 ## Scenario: existing daily folder
@@ -33,6 +34,7 @@ Pass criteria:
 - Lists and reuses the dated folder.
 - Updates only pairs whose stable ID and canonical URL match.
 - Creates pairs for new IDs without overwriting the unrelated file.
+- Reuses legacy pairs whose filenames contain `--<content-id>` without renaming them.
 - Keeps exactly one verified page/detail pair per stable content ID.
 
 ## Scenario: incomplete local pair under pressure

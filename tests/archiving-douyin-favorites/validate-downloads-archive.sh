@@ -16,6 +16,14 @@ rg -q -F '/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites' \
 
 rg -q '\.webloc' "$skill_dir/references/workflow.md"
 rg -q '详情.*\.md|metadata.*\.md' "$skill_dir/references/workflow.md"
+rg -q -F '<concise-content-title>.webloc' "$skill_dir/references/workflow.md"
+rg -q -F '<concise-content-title> 详情.md' "$skill_dir/references/workflow.md"
+rg -q -F ' (2)' "$skill_dir/references/workflow.md"
+
+if rg -n -F '<concise-content-title>--<content-id>' "$skill_dir"; then
+  print -u2 "FAIL: new Douyin archive filenames still require a content-ID suffix"
+  exit 1
+fi
 
 if rg -n '归档总结\.md|Summary Markdown File|daily summary|same-folder.*summary|Chinese summary Markdown|write Chinese summary' "$skill_dir"; then
   print -u2 "FAIL: douyin skill still requires a standalone summary Markdown file"

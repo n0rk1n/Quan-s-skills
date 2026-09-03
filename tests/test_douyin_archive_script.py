@@ -81,6 +81,10 @@ class DouyinArchiveScriptTests(unittest.TestCase):
         details = list(destination.glob("* 详情.md"))
         self.assertEqual(len(links), 1)
         self.assertEqual(len(details), 1)
+        self.assertEqual(links[0].name, "演示 路径 清理.webloc")
+        self.assertEqual(details[0].name, "演示 路径 清理 详情.md")
+        self.assertNotIn("7530000000000000001", links[0].name)
+        self.assertNotIn("7530000000000000001", details[0].name)
         self.assertEqual(
             plistlib.loads(links[0].read_bytes())["URL"],
             "https://www.douyin.com/video/7530000000000000001",
@@ -110,6 +114,55 @@ class DouyinArchiveScriptTests(unittest.TestCase):
         self.assertEqual(result["verified_ids"], ["7530000000000000001"])
         self.assertEqual([path.name for path in destination.glob("*.webloc")], [original_link.name])
         self.assertIn("更新后的文案", next(destination.glob("* 详情.md")).read_text(encoding="utf-8"))
+
+    def test_uses_short_numeric_suffix_when_titles_collide(self) -> None:
+        result = self.module.archive_items(
+            [
+                favorite(),
+                favorite(
+                    id="7530000000000000002",
+                    url="https://www.douyin.com/video/7530000000000000002",
+                ),
+            ],
+            downloads_root=self.downloads_root,
+            archive_date="2026-09-03",
+        )
+
+        destination = Path(result["destination"])
+        self.assertEqual(
+            sorted(path.name for path in destination.glob("*.webloc")),
+            ["演示 路径 清理 (2).webloc", "演示 路径 清理.webloc"],
+        )
+        self.assertEqual(
+            sorted(path.name for path in destination.glob("* 详情.md")),
+            ["演示 路径 清理 (2) 详情.md", "演示 路径 清理 详情.md"],
+        )
+
+    def test_reuses_legacy_id_pair_without_renaming(self) -> None:
+        destination = self.downloads_root / "2026-09-03 Archived DouYin Favorites"
+        destination.mkdir()
+        legacy_base = "旧标题--7530000000000000001"
+        legacy_link = destination / f"{legacy_base}.webloc"
+        legacy_detail = destination / f"{legacy_base} 详情.md"
+        legacy_link.write_bytes(
+            plistlib.dumps({"URL": "https://www.douyin.com/video/7530000000000000001"})
+        )
+        legacy_detail.write_text(
+            "旧版详情\n7530000000000000001\n"
+            "https://www.douyin.com/video/7530000000000000001\n"
+            f"{legacy_link.name}\n",
+            encoding="utf-8",
+        )
+
+        result = self.module.archive_items(
+            [favorite(caption="更新后的文案")],
+            downloads_root=self.downloads_root,
+            archive_date="2026-09-03",
+        )
+
+        self.assertEqual(result["verified_ids"], ["7530000000000000001"])
+        self.assertEqual([path.name for path in destination.glob("*.webloc")], [legacy_link.name])
+        self.assertIn("更新后的文案", legacy_detail.read_text(encoding="utf-8"))
 
     def test_rejects_noncanonical_url_before_writing(self) -> None:
         with self.assertRaisesRegex(ValueError, "canonical Douyin URL"):
