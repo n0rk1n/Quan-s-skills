@@ -7,7 +7,7 @@ Map host tools by semantic capability, not by exact name.
 1. Confirm the Skill was explicitly invoked, a signed-in browser is available, Python 3 can run the bundled archive script, and `/Users/oriki/Downloads` is writable.
 2. Let `scripts/archive_douyin_favorites.py` create or reuse `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`, where `YYYY-MM-DD` is the current local date.
 3. Use a default batch size of 24 unless the user explicitly specifies another size. Observe only that bounded batch and record stable content IDs, canonical URLs, visible facts, and topic labels.
-4. Pass the bounded batch as JSON on standard input to `scripts/archive_douyin_favorites.py`; do not manually write archive files.
+4. Pass the bounded batch as JSON on standard input to `scripts/archive_douyin_favorites.py`, or use `--input <batch-json>` for a large batch or an interactive terminal. Keep any input file outside the dated archive directory; do not manually write archive files.
 5. Require exit code 0, an empty `failed_items` list, and `verified_ids` equal to the full observed batch before any destructive action.
 6. If cleanup is requested, select only the verified archived IDs, inspect Douyin's final confirmation dialog, and submit only if its displayed scope and count match the current submission ID set.
 7. Reload, wait for lazy loading, and verify every archived ID submitted for cleanup.
@@ -24,7 +24,13 @@ Resolve the skill directory for the current installation, then run:
 python3 <skill-directory>/scripts/archive_douyin_favorites.py
 ```
 
-Pass one JSON object containing a non-empty `items` array through standard input. Do not save a manifest inside the dated archive directory. Each item has this shape:
+Pass one JSON object containing a non-empty `items` array through standard input. For a large batch or an interactive terminal, use:
+
+```text
+python3 <skill-directory>/scripts/archive_douyin_favorites.py --input <batch-json>
+```
+
+The file and stdin forms have the same validation and result contract. Do not save an input manifest inside the dated archive directory. Each item has this shape:
 
 ```json
 {
@@ -163,7 +169,7 @@ When the user says not to continue, stop before collecting or acting on another 
 | Destination | `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`. |
 | Per favorite | One `.webloc` plus one matching `详情.md` file. |
 | Detailed context | Store it in the matching `详情.md` file. |
-| Archive implementation | `scripts/archive_douyin_favorites.py` with batch JSON on stdin. |
+| Archive implementation | `scripts/archive_douyin_favorites.py` with batch JSON on stdin or `--input`. |
 | Cleanup | Only after verifying both local files for every exact archived ID. |
 
 ## Common Mistakes

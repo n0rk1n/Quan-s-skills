@@ -231,16 +231,25 @@ def archive_items(
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create and verify Douyin .webloc/detail pairs from JSON on stdin."
+        description="Create and verify Douyin .webloc/detail pairs from JSON."
     )
     parser.add_argument("--date", help="Archive date in YYYY-MM-DD; defaults to today.")
+    parser.add_argument(
+        "--input",
+        type=Path,
+        help="Read batch JSON from this file instead of standard input.",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     try:
-        payload = json.load(sys.stdin)
+        if args.input is None:
+            payload = json.load(sys.stdin)
+        else:
+            with args.input.open(encoding="utf-8") as input_handle:
+                payload = json.load(input_handle)
         raw_items = payload.get("items") if isinstance(payload, dict) else payload
         result = archive_items(
             raw_items,

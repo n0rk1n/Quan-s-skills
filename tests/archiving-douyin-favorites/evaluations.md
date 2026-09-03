@@ -20,7 +20,7 @@ Pass criteria:
 
 - Uses a batch size of 24.
 - Uses `/Users/oriki/Downloads/2026-09-03 Archived DouYin Favorites`.
-- Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input without saving a manifest in the archive directory.
+- Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input or with `--input`, without saving a manifest in the archive directory.
 - Writes one `.webloc` and one matching `详情.md` file per stable content ID.
 - Preserves canonical `/video/<id>` or `/note/<id>` URLs and all visible context in the detail files.
 

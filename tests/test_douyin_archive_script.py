@@ -168,6 +168,34 @@ class DouyinArchiveScriptTests(unittest.TestCase):
         destination = Path(payload["destination"])
         self.assertFalse(any(path.suffix == ".json" for path in destination.iterdir()))
 
+    def test_cli_reads_large_batch_from_input_file(self) -> None:
+        input_path = self.downloads_root / "batch.json"
+        input_path.write_text(
+            json.dumps({"items": [favorite()]}),
+            encoding="utf-8",
+        )
+        stdout = io.StringIO()
+        with (
+            mock.patch.object(
+                sys,
+                "argv",
+                [
+                    str(SCRIPT_PATH),
+                    "--date",
+                    "2026-09-03",
+                    "--input",
+                    str(input_path),
+                ],
+            ),
+            mock.patch.object(self.module, "DEFAULT_DOWNLOADS_ROOT", self.downloads_root),
+            redirect_stdout(stdout),
+        ):
+            exit_code = self.module.main()
+
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(payload["verified_ids"], ["7530000000000000001"])
+
 
 if __name__ == "__main__":
     unittest.main()
