@@ -11,10 +11,9 @@ Map host tools by semantic capability, not by exact name.
 5. Verify file count, ID count, canonical-URL count, unique URL count, metadata coverage, and one-to-one ID/URL mapping.
 6. If cleanup is requested, select only the verified archived IDs, inspect Douyin's final confirmation dialog, and submit only if its displayed scope and count match the current submission ID set.
 7. Reload, wait for lazy loading, and verify every archived ID submitted for cleanup.
-8. Write a Chinese Markdown summary in the same local folder and verify it covers the archive.
-9. Report the absolute destination, archived favorite count, summary path, verified removals, and unresolved IDs. Stop if requested.
+8. Report the absolute destination, verified page/detail pair count, verified removals, and unresolved IDs. Stop if requested.
 
-Never reorder these gates: `verify browser and Downloads access → prepare dated folder → observe → write local files → verify local files → select exact archived IDs → inspect dialog → unfavorite → delayed verify → write Chinese summary → verify summary`.
+Never reorder these gates: `verify browser and Downloads access → prepare dated folder → observe → write local files → verify local files → select exact archived IDs → inspect dialog → unfavorite → delayed verify`.
 
 ## Local Destination
 
@@ -68,33 +67,11 @@ The `详情.md` file stores all structured context that must remain available lo
 - caution for medical, financial, benchmark, income, popularity, or product claims; and
 - archive status such as `archived; pending unfavorite`, `complete`, or `partial/unresolved`.
 
-Write metadata and summary text in Simplified Chinese by default. Preserve fixed identifiers, URLs, filenames, and tag strings exactly when needed.
+Write detail-file text in Simplified Chinese by default. Preserve fixed identifiers, URLs, filenames, and tag strings exactly when needed.
 
 Before cleanup, read every current-batch file back from disk. Count `.webloc` files, matching `详情.md` files, archived IDs, canonical URLs, unique IDs, and unique canonical URLs. Every current-batch ID must map to exactly one readable `.webloc` and one readable metadata file; the URL and ID must agree across browser evidence, filename, link file, and metadata. All counts must equal the batch size. Correct any mismatch before proceeding.
 
 Label visible facts as facts. Clearly mark any synthesis, takeaway, interpretation, or inferred context as inference, and do not invent missing details. Add explicit caution rather than endorsement when recording medical, financial, benchmark, income, popularity, or product claims; visible engagement counts and creator assertions are not independent verification.
-
-## Summary Markdown File
-
-After local archive verification and any requested cleanup attempt, write:
-
-```text
-/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites/YYYY-MM-DD DouYin 收藏归档总结.md
-```
-
-Update the same daily summary atomically so it represents all verified files currently in the dated folder without duplicating stable content IDs. The summary must include these sections in Chinese:
-
-- absolute destination and processing status;
-- current invocation batch size and daily aggregate count;
-- evidence limitations, including what was and was not visible;
-- cross-item synthesis grouped by topic;
-- a table or list of all archived favorites with page-link filename, canonical URL, author, tags, and one-line summary;
-- unresolved metadata or failed file operations, if any; and
-- cleanup status if unfavoriting was requested.
-
-Do not include a `内容 ID` or `Content ID` column in the archived-favorites table/list. IDs remain available in filenames and detail files and may appear in verification, unresolved-metadata notes, or exact cleanup notes.
-
-Read the summary back and verify its item count, canonical URLs, filenames, tag coverage, Chinese-language text, processing status, cleanup status, and unresolved/sparse metadata notes against the local archive. Chat output is not a substitute for this file. If summary creation or verification fails, preserve verified per-favorite files and cleanup state, report partial completion, and do not claim full completion.
 
 ## Cleanup Gate
 
@@ -128,11 +105,9 @@ while remaining_ids is non-empty and progress is being made:
 
 If the same remaining set persists across three attempts, stop and report it. Never expand cleanup to new IDs. Report partial success with exact verified-absent IDs and exact remaining IDs; mark the batch complete only when delayed verification finds none of `archived_ids` present.
 
-## Stopping and Daily Aggregation
+## Stopping
 
 When the user says not to continue, stop before collecting or acting on another batch. Keep already written files and distinguish complete, partially successful, and unresolved batches. A later unrelated request must not implicitly resume this Skill.
-
-Aggregate only verified local file pairs. Deduplicate by stable content ID, preserve one canonical URL per ID, retain useful visible facts and cautions, and exclude/report every unmatched, unreadable, pending, partially successful, or unresolved pair. Never use aggregation as permission to unfavorite.
 
 ## Quick Reference
 
@@ -143,17 +118,15 @@ Aggregate only verified local file pairs. Deduplicate by stable content ID, pres
 | Destination | `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`. |
 | Per favorite | One `.webloc` plus one matching `详情.md` file. |
 | Detailed context | Store it in the matching `详情.md` file. |
-| Completion note | Chinese daily summary Markdown in the same folder. |
 | Cleanup | Only after verifying both local files for every exact archived ID. |
 
 ## Common Mistakes
 
 - Redirecting output to another convenient directory when Downloads is unavailable.
-- Writing only a summary or only `.webloc` links instead of a complete pair per favorite.
+- Writing only `.webloc` links instead of a complete pair per favorite.
 - Overwriting unrelated files already present in the daily directory.
 - Naming files by index or author only instead of main content plus stable content ID.
-- Putting details in chat only instead of the matching detail file and daily summary.
-- Writing the daily summary in English instead of Chinese.
+- Putting details in chat only instead of the matching detail file.
 - Unfavoriting first because cached data appears sufficient to rebuild the archive.
 - Selecting “the first N cards” instead of matching archived content IDs.
 - Counting files or unique URLs only after the destructive action.

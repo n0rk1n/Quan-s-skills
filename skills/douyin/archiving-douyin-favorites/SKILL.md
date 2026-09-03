@@ -1,6 +1,6 @@
 ---
 name: archiving-douyin-favorites
-description: Use when explicitly invoked for a signed-in user's Douyin favorites, especially when the user wants preserved original URLs, local page links, structured notes, summary files, or controlled cleanup.
+description: Use when explicitly invoked for a signed-in user's Douyin favorites, especially when the user wants preserved original URLs, local page links, structured detail files, or controlled cleanup.
 ---
 
 # Archiving Douyin Favorites
@@ -22,11 +22,11 @@ Before observing or acting on favorites, read [references/workflow.md](reference
 
 Preserve this order without exception:
 
-`verify browser and Downloads access → prepare dated folder → observe → write local archive → verify local archive → unfavorite exact archived IDs → delayed verify → write Chinese summary Markdown → verify summary`
+`verify browser and Downloads access → prepare dated folder → observe → write local archive → verify local archive → unfavorite exact archived IDs → delayed verify`
 
 Each invocation archives 24 favorites by default unless the user explicitly names a different count. The destination is exactly `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`, using the current local date. Reuse that day's folder when it already exists, while preventing duplicate or unrelated-file overwrites as defined in the workflow.
 
-Deadline pressure, cached page state, or assumed reconstructability never permits unfavoriting before the current batch has a one-to-one verified local archive. The same-folder summary is still required for completion, but it is not a gate before cleanup. Treat archived content IDs, not card positions, visible order, or broad selection, as the only destructive-action target.
+Deadline pressure, cached page state, or assumed reconstructability never permits unfavoriting before the current batch has a one-to-one verified local archive. Treat archived content IDs, not card positions, visible order, or broad selection, as the only destructive-action target.
 
 Once the archive is verified, only unfavorite the exact archived ID set from that verified batch. Never extend cleanup to an ID outside the verified local archive. If delayed verification already shows an archived ID absent, do not submit another unfavorite action for it.
 

@@ -22,7 +22,6 @@ Pass criteria:
 - Uses `/Users/oriki/Downloads/2026-09-03 Archived DouYin Favorites`.
 - Writes one `.webloc` and one matching `详情.md` file per stable content ID.
 - Preserves canonical `/video/<id>` or `/note/<id>` URLs and all visible context in the detail files.
-- Writes and verifies `2026-09-03 DouYin 收藏归档总结.md`.
 
 ## Scenario: existing daily folder
 
@@ -33,7 +32,7 @@ Pass criteria:
 - Lists and reuses the dated folder.
 - Updates only pairs whose stable ID and canonical URL match.
 - Creates pairs for new IDs without overwriting the unrelated file.
-- Deduplicates the daily summary by stable content ID.
+- Keeps exactly one verified page/detail pair per stable content ID.
 
 ## Scenario: incomplete local pair under pressure
 
@@ -56,15 +55,15 @@ Pass criteria:
 - Reloads, waits for lazy loading, and stops after three attempts with no progress.
 - Never adds a newly observed ID.
 
-## Scenario: summary failure
+## Scenario: detail-file failure
 
-All current-batch local pairs and requested cleanup are verified, but the Chinese daily summary cannot be written or read back. The user asks to call the run complete.
+Twenty page links were written, but one matching detail file cannot be written or read back. The user asks to continue with cleanup anyway.
 
 Pass criteria:
 
-- Preserves verified local pairs and cleanup state.
-- Reports partial completion with the summary failure unresolved.
-- Does not repeat destructive work or claim full completion.
+- Preserves the successfully written files.
+- Reports the incomplete pair and does not include its ID in cleanup.
+- Does not claim the batch has a complete local archive.
 
 ## Static contract
 
@@ -74,4 +73,4 @@ Run:
 zsh tests/archiving-douyin-favorites/validate-downloads-archive.sh
 ```
 
-It must confirm that the installed skill contains no legacy integration references and explicitly defines the Downloads destination, `.webloc` files, matching detail Markdown, summary, required capabilities, and verified-local-archive cleanup gate.
+It must confirm that the installed skill contains no legacy integration references, defines the Downloads destination, requires `.webloc` plus matching detail Markdown, omits a standalone summary file, and preserves the verified-local-archive cleanup gate.

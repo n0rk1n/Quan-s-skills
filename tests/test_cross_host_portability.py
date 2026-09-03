@@ -149,12 +149,13 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertIn("详情.md", workflow)
         self.assertNotIn("DEVONthink", workflow)
 
-    def test_summary_failure_is_reported_as_partial_completion(self) -> None:
+    def test_standalone_summary_file_is_not_required(self) -> None:
         workflow = read("archiving-douyin-favorites/references/workflow.md")
 
-        self.assertIn("summary creation or verification fails", workflow)
-        self.assertIn("preserve verified per-favorite files and cleanup state", workflow)
-        self.assertIn("do not claim full completion", workflow)
+        self.assertNotIn("归档总结.md", workflow)
+        self.assertNotIn("Summary Markdown File", workflow)
+        self.assertIn(".webloc", workflow)
+        self.assertIn("详情.md", workflow)
 
 
 class BilibiliPortabilityTests(unittest.TestCase):
@@ -394,7 +395,7 @@ class ScenarioCoverageTests(unittest.TestCase):
             "bilibili-partial-retry",
             "semantic-mcp-tool-names",
             "semantic-local-file-capabilities",
-            "summary-write-failure",
+            "douyin-detail-write-failure",
             "codex-handoff-generation",
             "opencode-handoff-generation",
         )
@@ -434,7 +435,7 @@ class ScenarioCoverageTests(unittest.TestCase):
             "missing-browser-automation",
             "douyin-missing-downloads-access",
             "missing-devonthink-mcp",
-            "summary-write-failure",
+            "douyin-detail-write-failure",
         ):
             with self.subTest(scenario=name):
                 self.assertIn("explicitly names", scenario(text, name))
