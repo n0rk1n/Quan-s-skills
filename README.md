@@ -108,4 +108,5 @@ Files under `agents/`, including `agents/openai.yaml`, are optional OpenAI/Codex
 ## Notes
 
 - New conversation archives are kept in `~/Downloads/YYYY-MM-DD Archived AI Conversations/`. Existing DEVONthink archives are untouched.
+- The archive skill includes `scripts/archive_conversation.py` for Downloads access checks, paired Markdown generation, collision handling, transcript links, and read-back verification. It requires Python 3.10+ on macOS/Linux and uses only the standard library. See the skill's `references/script-usage.md` for JSON input and commands.
 - The archive skill includes a bundled transcript exporter under `archiving-ai-conversation/scripts/conversation_exporter` for optional Codex JSONL and ChatGPT export support.
