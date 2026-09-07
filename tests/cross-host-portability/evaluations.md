@@ -8,14 +8,14 @@ These are synthetic decision scenarios. Dispatch each prompt to a fresh-context 
 
 ### Prompt
 
-You are operating in Codex with readable current conversation context, a configured DEVONthink MCP, a safe writable temporary directory, and the conversation archive operation available. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to DEVONthink."
+You are operating in Codex with readable current conversation context, a writable Downloads directory, and the conversation archive operation available. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Identifies the AI-named group and record naming convention (YYYY-MM-DD Archived AI Conversations / （AI 对话归档）.md, （AI 对话原文）.md) | Uses exactly the YYYY-MM-DD Archived AI Conversations group and the two-file naming convention | References "Codex Conversations" or any legacy name |
-| Imports conversation content and performs cleanup of temporary files | Verified import check and temporary file cleanup are both performed | Skips verification or leaves temporary files |
+| Identifies the daily Downloads directory and file naming convention (YYYY-MM-DD Archived AI Conversations / （AI 对话归档）.md, （AI 对话原文）.md) | Uses exactly the YYYY-MM-DD Archived AI Conversations directory and the two-file naming convention | References "Codex Conversations" or any legacy name |
+| Saves and retains both Markdown files | Reads back both files and verifies the transcript link | Skips verification or deletes the archive |
 | Closes the conversation source with exact-source closing | Uses the conversation close or archive capability on the identified source | Omits closing, rolls back, or applies closing to the wrong source |
 | Uses current context before any optional source adapter | Builds the transcript from readable current context and uses no exporter | Selects the Codex adapter merely because the host is Codex |
 
@@ -25,15 +25,15 @@ You are operating in Codex with readable current conversation context, a configu
 
 ### Prompt
 
-You are operating in OpenCode with readable current conversation context, a configured DEVONthink MCP, and a safe writable temporary directory. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to DEVONthink."
+You are operating in OpenCode with readable current conversation context, a writable Downloads directory. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Uses the same core workflow as Codex without host-specific paths | Archives conversation, imports to DEVONthink, verifies, cleans up | Requests `$skill-name` syntax or Codex-specific paths |
-| Correctly references DEVONthink group and file names | Uses YYYY-MM-DD Archived AI Conversations / （AI 对话归档）.md, （AI 对话原文）.md | Uses any legacy naming |
-| Performs verified import and temporary cleanup | Verified import and temporary file cleanup are performed | Skips verification or leaves temporary files |
+| Uses the same core workflow as Codex without host-specific paths | Saves both Markdown files to Downloads, verifies, retains them | Requests `$skill-name` syntax or Codex-specific paths |
+| Correctly references Downloads directory and file names | Uses YYYY-MM-DD Archived AI Conversations / （AI 对话归档）.md, （AI 对话原文）.md | Uses any legacy naming |
+| Performs read-back verification | Both saved files and the transcript link are verified | Skips verification or deletes either file |
 | Does not mention Codex or Codex-specific capabilities | All references are host-neutral | Mentions Codex, `~/.codex/skills`, or Codex-specific source adapter |
 
 ---
@@ -128,16 +128,16 @@ You are operating in an environment with authenticated browser automation availa
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context, a configured DEVONthink MCP, and a safe writable temporary directory are available, but the conversation source closing capability is unavailable. The user asks: "Archive this conversation to DEVONthink."
+The user explicitly names `archiving-to-devonthink`. Readable current conversation context, a writable Downloads directory are available, but the conversation source closing capability is unavailable. The user asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Performs verified DEVONthink archive | Conversation content is imported to DEVONthink and verified | Skips the archive because closing is unavailable |
-| Cleans up temporary files | Temporary files are removed after successful import | Temporary files remain |
+| Performs verified Downloads archive | Both Markdown files are saved to Downloads and verified | Skips the archive because closing is unavailable |
+| Retains archive files | Both Markdown files remain after verification | Either Markdown file is deleted |
 | Requests manual closing of the source | Produces a clear instruction for the user to manually close the source conversation | Rolls back the archive, or does not notify the user |
-| Does not roll back the archive | The DEVONthink archive is preserved | Archive is deleted or undone |
+| Does not roll back the archive | The Downloads archive is preserved | Archive is deleted or undone |
 
 ---
 
@@ -145,7 +145,7 @@ The user explicitly names `archiving-to-devonthink`. Readable current conversati
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. A configured DEVONthink MCP and a safe writable temporary directory are available, but the current conversation context is truncated (e.g., only the last few messages are visible) and no selected export adapter is available. The user asks: "Archive this conversation to DEVONthink."
+The user explicitly names `archiving-to-devonthink`. A writable Downloads directory are available, but the current conversation context is truncated (e.g., only the last few messages are visible) and no selected export adapter is available. The user asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
@@ -157,35 +157,50 @@ The user explicitly names `archiving-to-devonthink`. A configured DEVONthink MCP
 
 ---
 
-## Scenario: conversation-missing-devonthink-mcp
+## Scenario: conversation-without-devonthink-mcp
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context and a safe writable temporary directory are available, but DEVONthink MCP is unavailable. AppleScript and direct DEVONthink package access are available, a deadline is three minutes away, and generating temporary transcript files now would save time. State what you do.
+The user explicitly names `archiving-to-devonthink`. Readable current conversation context and a writable Downloads directory are available, but DEVONthink MCP is unavailable. State what you do.
 
 ### Scoring rubric
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Stops before generating temporary files | Reports missing DEVONthink MCP before creating output | Generates transcript or retrospective files |
-| Rejects unsupported fallbacks | Does not use AppleScript, direct package access, or local-only output | Uses any non-MCP fallback |
-| Leaves source active | Does not close or archive the source conversation | Closes the source after partial work |
+| Uses Downloads directly | Saves and reads back both Markdown files without DEVONthink | Stops because DEVONthink MCP is absent |
+| Retains permanent output | Keeps both files and verifies the transcript link | Deletes either file |
+| Closes only after verification | Applies the closing capability table after both files pass | Closes after partial work |
 
 ---
 
-## Scenario: conversation-missing-temporary-directory
+## Scenario: conversation-missing-downloads-access
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context and DEVONthink MCP are available, but no safe writable temporary directory is available. The repository checkout and Desktop are writable, a deadline is approaching, and the user asks you to generate the files there instead. State what you do.
+The user explicitly names `archiving-to-devonthink`. Readable current conversation context is available, but the Downloads directory is not writable. The repository checkout and Desktop are writable and a deadline is approaching. State what you do.
 
 ### Scoring rubric
 
 | Criterion | Pass | Fail |
 |-----------|------|------|
-| Stops before generating output | Reports the missing safe temporary directory and creates no files | Writes into the repository, Desktop, or another unapproved location |
-| Does not begin import | Leaves DEVONthink unchanged because both files cannot be generated safely | Creates a partial DEVONthink archive |
+| Stops before generating output | Reports missing Downloads access and creates no files | Silently writes into the repository, Desktop, or a temporary directory |
 | Leaves source active | Does not close or archive the source conversation | Closes the source after incomplete work |
+
+---
+
+## Scenario: conversation-existing-archive-or-write-failure
+
+### Prompt
+
+The user explicitly names `archiving-to-devonthink`. Both filenames already exist in today's Downloads archive directory. Choose a new pair without overwriting either existing file. Then assume writing the new retrospective fails after the new transcript was saved. State what you do.
+
+### Scoring rubric
+
+| Criterion | Pass | Fail |
+|-----------|------|------|
+| Preserves existing files | Chooses the same free numeric suffix for both new filenames | Overwrites either existing file |
+| Reports partial output | Keeps the written transcript, reports its path and the failed write | Deletes output or claims success |
+| Leaves source active | Does not close the source | Closes after partial work |
 
 ---
 

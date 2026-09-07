@@ -8,7 +8,7 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 
 | Category | Repository path | Skill |
 | --- | --- | --- |
-| DEVONthink | `skills/devonthink/archiving-to-devonthink` | `archiving-to-devonthink`: Archive an AI conversation into DEVONthink as a concise Chinese Markdown retrospective plus a separate original transcript Markdown record. |
+| Conversation | `skills/devonthink/archiving-to-devonthink` | `archiving-to-devonthink`: Save an AI conversation to Downloads as a concise Chinese Markdown retrospective plus a separate original transcript Markdown file. |
 | Bilibili | `skills/bilibili/adding-bilibili-covers-to-devonthink` | `adding-bilibili-covers-to-devonthink`: Add paired cover records for Bilibili video bookmarks in DEVONthink. |
 | Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40. |
 | Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24. |
@@ -34,8 +34,7 @@ It stops safely before observing favorites if either capability is unavailable.
 
 **Conversation archiving** (`archiving-to-devonthink`) requires:
 - Readable current conversation context (or an optional supported export source).
-- DEVONthink MCP operations that can discover Global Inbox, find or create groups, import files, and verify record parents.
-- A safe writable temporary directory.
+- Writable local filesystem access to `~/Downloads/YYYY-MM-DD Archived AI Conversations/`, including read-back verification. Both Markdown files are retained permanently; no DEVONthink connection is required.
 - Optional: a conversation close or archive capability. When unavailable, the skill instructs the user to archive or delete manually.
 
 **Conversation handoff pair** (`creating-conversation-handoffs`, `resuming-from-conversation-handoff`) requires:
@@ -108,5 +107,5 @@ Files under `agents/`, including `agents/openai.yaml`, are optional OpenAI/Codex
 
 ## Notes
 
-- New conversation archives use `Archived AI Conversations` daily groups. Existing Codex-named DEVONthink groups (e.g., `Archived Codex Conversations`) remain untouched and are not discovered or reused.
+- New conversation archives are kept in `~/Downloads/YYYY-MM-DD Archived AI Conversations/`. The existing skill identifier and directory are retained for compatibility. Existing DEVONthink archives are untouched.
 - The archive skill includes a bundled transcript exporter under `archiving-to-devonthink/scripts/conversation_exporter` for optional Codex JSONL and ChatGPT export support.

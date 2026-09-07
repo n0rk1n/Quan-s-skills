@@ -98,15 +98,18 @@ class ConversationPortabilityTests(unittest.TestCase):
         self.assertIn("AI 对话", text)
         self.assertNotIn("archive this Codex conversation", text)
 
-    def test_preflight_stops_before_generation_without_devonthink_mcp(self) -> None:
+    def test_conversation_requires_downloads_and_retains_verified_files(self) -> None:
         text = read("archiving-to-devonthink/SKILL.md")
         fields = parse_frontmatter(text)
 
         self.assertIn("explicitly names or invokes", fields["description"])
         self.assertIn("explicitly names or invokes this skill", text)
-        self.assertIn("Stop before generating temporary files", text)
-        self.assertIn("AppleScript", text)
-        self.assertIn("direct DEVONthink package", text)
+        self.assertIn("Stop before generating files", text)
+        self.assertIn("~/Downloads/YYYY-MM-DD Archived AI Conversations/", text)
+        self.assertIn("Keep both Markdown files permanently", text)
+        self.assertIn("Read both final files back as UTF-8", text)
+        self.assertIn("Never overwrite existing archives", text)
+        self.assertNotIn("mode: import", text)
 
     def test_optional_export_adapters_have_executable_commands(self) -> None:
         text = read("archiving-to-devonthink/SKILL.md")
@@ -392,8 +395,9 @@ class ScenarioCoverageTests(unittest.TestCase):
             "missing-devonthink-mcp",
             "missing-conversation-closing",
             "insufficient-conversation-context",
-            "conversation-missing-devonthink-mcp",
-            "conversation-missing-temporary-directory",
+            "conversation-without-devonthink-mcp",
+            "conversation-missing-downloads-access",
+            "conversation-existing-archive-or-write-failure",
             "bilibili-partial-retry",
             "semantic-mcp-tool-names",
             "semantic-local-file-capabilities",
@@ -414,10 +418,10 @@ class ScenarioCoverageTests(unittest.TestCase):
         opencode = scenario(text, "opencode-all-capabilities")
 
         self.assertIn("readable current conversation context", codex)
-        self.assertIn("safe writable temporary directory", codex)
+        self.assertIn("writable Downloads directory", codex)
         self.assertIn("current context before any optional source adapter", codex)
         self.assertIn("readable current conversation context", opencode)
-        self.assertIn("safe writable temporary directory", opencode)
+        self.assertIn("writable Downloads directory", opencode)
         self.assertNotIn("browser automation", opencode)
 
     def test_handoff_scenarios_use_neutral_paths_and_host_references(self) -> None:
@@ -448,10 +452,9 @@ class ScenarioCoverageTests(unittest.TestCase):
         insufficient_context = scenario(text, "insufficient-conversation-context")
 
         self.assertIn("explicitly names `archiving-to-devonthink`", missing_closing)
-        self.assertIn("safe writable temporary directory", missing_closing)
+        self.assertIn("writable Downloads directory", missing_closing)
         self.assertIn("explicitly names `archiving-to-devonthink`", insufficient_context)
-        self.assertIn("configured DEVONthink MCP", insufficient_context)
-        self.assertIn("safe writable temporary directory", insufficient_context)
+        self.assertIn("writable Downloads directory", insufficient_context)
 
 
 if __name__ == "__main__":
