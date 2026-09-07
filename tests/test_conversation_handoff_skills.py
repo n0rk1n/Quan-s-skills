@@ -57,7 +57,7 @@ class CreatingConversationHandoffsContractTests(unittest.TestCase):
 
     def test_generator_never_archives_the_source(self) -> None:
         skill = read_or_empty(GENERATOR / "SKILL.md")
-        self.assertIn("Do not invoke or load `archiving-to-devonthink`", skill)
+        self.assertIn("Do not invoke or load `archiving-ai-conversation`", skill)
         self.assertIn("remind the user", skill)
         self.assertIn("after the new conversation resumes successfully", skill)
 
@@ -176,7 +176,7 @@ class ResumingFromConversationHandoffContractTests(unittest.TestCase):
             "Do not modify, replace, or delete the handoff",
             skill,
         )
-        self.assertIn("Do not invoke or load `archiving-to-devonthink`", skill)
+        self.assertIn("Do not invoke or load `archiving-ai-conversation`", skill)
         self.assertNotIn("validate_handoff.py", skill)
 
     def test_reader_requests_a_safe_entry_after_malformed_input(self) -> None:

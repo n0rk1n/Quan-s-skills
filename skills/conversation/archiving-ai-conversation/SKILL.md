@@ -1,6 +1,6 @@
 ---
-name: archiving-to-devonthink
-description: Use when the user explicitly names or invokes archiving-to-devonthink or 归档 AI 对话 to tidy, summarize, or preserve an AI conversation/session in Codex, OpenCode, or another capable host.
+name: archiving-ai-conversation
+description: Use when the user explicitly names or invokes archiving-ai-conversation or 归档 AI 对话 to tidy, summarize, or preserve an AI conversation/session in Codex, OpenCode, or another capable host.
 ---
 
 # Archiving AI Conversations to Downloads
@@ -9,7 +9,7 @@ description: Use when the user explicitly names or invokes archiving-to-devonthi
 
 Save a concise transcript and Chinese retrospective as two Markdown files in the user's Downloads directory, verify both files, then close the source conversation as far as the host allows. Keep both files as the permanent archive.
 
-The identifier `archiving-to-devonthink` is retained for compatibility. This skill does not require or write to DEVONthink.
+This skill does not require or write to DEVONthink.
 
 **Complete everything the host supports:** agents archive conversations themselves when a tool exists; otherwise they ask the user to archive or delete manually.
 

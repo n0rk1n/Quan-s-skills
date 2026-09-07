@@ -13,7 +13,7 @@ SKILL_CATEGORIES = {
     "archiving-bilibili-favorites": "bilibili",
     "archiving-bilibili-following": "bilibili",
     "archiving-douyin-favorites": "douyin",
-    "archiving-to-devonthink": "devonthink",
+    "archiving-ai-conversation": "conversation",
     "creating-conversation-handoffs": "conversation",
     "resuming-from-conversation-handoff": "conversation",
 }
@@ -76,7 +76,7 @@ def scenario(text: str, name: str) -> str:
 
 class ConversationPortabilityTests(unittest.TestCase):
     def test_conversation_skill_uses_host_neutral_source_and_names(self) -> None:
-        text = read("archiving-to-devonthink/SKILL.md")
+        text = read("archiving-ai-conversation/SKILL.md")
 
         self.assertIn("readable current conversation context", text)
         self.assertIn("optional source adapter", text)
@@ -86,20 +86,20 @@ class ConversationPortabilityTests(unittest.TestCase):
         self.assertNotIn("YYYY-MM-DD Archived Codex Conversations", text)
 
     def test_codex_sources_and_closing_are_optional_capabilities(self) -> None:
-        text = read("archiving-to-devonthink/SKILL.md")
+        text = read("archiving-ai-conversation/SKILL.md")
 
         self.assertRegex(text, r"Codex.+optional|optional.+Codex")
         self.assertIn("conversation close or archive capability", text)
         self.assertIn("manual", text.lower())
 
     def test_openai_metadata_describes_an_ai_conversation(self) -> None:
-        text = read("archiving-to-devonthink/agents/openai.yaml")
+        text = read("archiving-ai-conversation/agents/openai.yaml")
 
         self.assertIn("AI 对话", text)
         self.assertNotIn("archive this Codex conversation", text)
 
     def test_conversation_requires_downloads_and_retains_verified_files(self) -> None:
-        text = read("archiving-to-devonthink/SKILL.md")
+        text = read("archiving-ai-conversation/SKILL.md")
         fields = parse_frontmatter(text)
 
         self.assertIn("explicitly names or invokes", fields["description"])
@@ -112,7 +112,7 @@ class ConversationPortabilityTests(unittest.TestCase):
         self.assertNotIn("mode: import", text)
 
     def test_optional_export_adapters_have_executable_commands(self) -> None:
-        text = read("archiving-to-devonthink/SKILL.md")
+        text = read("archiving-ai-conversation/SKILL.md")
 
         self.assertIn(
             'PYTHONPATH="$SKILL_DIR/scripts" python3 -m conversation_exporter.cli codex',
@@ -451,9 +451,9 @@ class ScenarioCoverageTests(unittest.TestCase):
         missing_closing = scenario(text, "missing-conversation-closing")
         insufficient_context = scenario(text, "insufficient-conversation-context")
 
-        self.assertIn("explicitly names `archiving-to-devonthink`", missing_closing)
+        self.assertIn("explicitly names `archiving-ai-conversation`", missing_closing)
         self.assertIn("writable Downloads directory", missing_closing)
-        self.assertIn("explicitly names `archiving-to-devonthink`", insufficient_context)
+        self.assertIn("explicitly names `archiving-ai-conversation`", insufficient_context)
         self.assertIn("writable Downloads directory", insufficient_context)
 
 

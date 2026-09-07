@@ -112,7 +112,7 @@ conversation.
   otherwise retain `待核实` and continue safely.
 
 Do not modify, replace, or delete the handoff or its `LATEST.md` index.
-Do not invoke or load `archiving-to-devonthink`; reading a handoff never
+Do not invoke or load `archiving-ai-conversation`; reading a handoff never
 archives, closes, or deletes the source conversation.
 
 ## Common Mistakes

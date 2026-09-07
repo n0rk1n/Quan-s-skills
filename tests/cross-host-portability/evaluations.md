@@ -8,7 +8,7 @@ These are synthetic decision scenarios. Dispatch each prompt to a fresh-context 
 
 ### Prompt
 
-You are operating in Codex with readable current conversation context, a writable Downloads directory, and the conversation archive operation available. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to Downloads."
+You are operating in Codex with readable current conversation context, a writable Downloads directory, and the conversation archive operation available. The user explicitly names `archiving-ai-conversation` and asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
@@ -25,7 +25,7 @@ You are operating in Codex with readable current conversation context, a writabl
 
 ### Prompt
 
-You are operating in OpenCode with readable current conversation context, a writable Downloads directory. The user explicitly names `archiving-to-devonthink` and asks: "Archive this conversation to Downloads."
+You are operating in OpenCode with readable current conversation context, a writable Downloads directory. The user explicitly names `archiving-ai-conversation` and asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
@@ -128,7 +128,7 @@ You are operating in an environment with authenticated browser automation availa
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context, a writable Downloads directory are available, but the conversation source closing capability is unavailable. The user asks: "Archive this conversation to Downloads."
+The user explicitly names `archiving-ai-conversation`. Readable current conversation context, a writable Downloads directory are available, but the conversation source closing capability is unavailable. The user asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
@@ -145,7 +145,7 @@ The user explicitly names `archiving-to-devonthink`. Readable current conversati
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. A writable Downloads directory are available, but the current conversation context is truncated (e.g., only the last few messages are visible) and no selected export adapter is available. The user asks: "Archive this conversation to Downloads."
+The user explicitly names `archiving-ai-conversation`. A writable Downloads directory are available, but the current conversation context is truncated (e.g., only the last few messages are visible) and no selected export adapter is available. The user asks: "Archive this conversation to Downloads."
 
 ### Scoring rubric
 
@@ -161,7 +161,7 @@ The user explicitly names `archiving-to-devonthink`. A writable Downloads direct
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context and a writable Downloads directory are available, but DEVONthink MCP is unavailable. State what you do.
+The user explicitly names `archiving-ai-conversation`. Readable current conversation context and a writable Downloads directory are available, but DEVONthink MCP is unavailable. State what you do.
 
 ### Scoring rubric
 
@@ -177,7 +177,7 @@ The user explicitly names `archiving-to-devonthink`. Readable current conversati
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Readable current conversation context is available, but the Downloads directory is not writable. The repository checkout and Desktop are writable and a deadline is approaching. State what you do.
+The user explicitly names `archiving-ai-conversation`. Readable current conversation context is available, but the Downloads directory is not writable. The repository checkout and Desktop are writable and a deadline is approaching. State what you do.
 
 ### Scoring rubric
 
@@ -192,7 +192,7 @@ The user explicitly names `archiving-to-devonthink`. Readable current conversati
 
 ### Prompt
 
-The user explicitly names `archiving-to-devonthink`. Both filenames already exist in today's Downloads archive directory. Choose a new pair without overwriting either existing file. Then assume writing the new retrospective fails after the new transcript was saved. State what you do.
+The user explicitly names `archiving-ai-conversation`. Both filenames already exist in today's Downloads archive directory. Choose a new pair without overwriting either existing file. Then assume writing the new retrospective fails after the new transcript was saved. State what you do.
 
 ### Scoring rubric
 

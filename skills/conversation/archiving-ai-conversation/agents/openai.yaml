@@ -1,0 +1,4 @@
+interface:
+  display_name: "归档 AI 对话"
+  short_description: "整理当前 AI 对话并保存到下载目录"
+  default_prompt: "Use the archiving-ai-conversation skill to archive this AI conversation as two permanent Markdown files in today's Downloads archive directory, read back and verify both files, and close the source conversation when the host supports it."

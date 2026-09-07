@@ -127,8 +127,8 @@ Replace `{{snapshot_absolute_path}}` before showing the prompt. Report
 validation results and whether `LATEST.md` was updated.
 
 Then remind the user that, after the new conversation resumes successfully,
-they may manually invoke `archiving-to-devonthink` for the old conversation.
-Do not invoke or load `archiving-to-devonthink`, and do not archive, close, or
+they may manually invoke `archiving-ai-conversation` for the old conversation.
+Do not invoke or load `archiving-ai-conversation`, and do not archive, close, or
 delete the source conversation.
 
 ## Common Mistakes
