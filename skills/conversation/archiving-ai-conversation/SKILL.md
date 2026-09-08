@@ -11,8 +11,6 @@ Save a concise transcript and Chinese retrospective as two Markdown files in the
 
 This skill does not require or write to DEVONthink.
 
-**Complete everything the host supports:** agents archive conversations themselves when a tool exists; otherwise they ask the user to archive or delete manually.
-
 ## Explicit Selection
 
 Run this Skill only when the user explicitly names or invokes this skill through the current host. Do not require a particular invocation syntax or infer selection from a merely related request.
@@ -24,13 +22,17 @@ Run this Skill only when the user explicitly names or invokes this skill through
 - Python 3.10+ on macOS/Linux for the bundled writer (standard library only).
 - Optional: a conversation close or archive capability that can target the exact source conversation.
 
-Map the current host's tools to these semantic capabilities before reading an external export source or creating output. If readable source content or writable Downloads access is unavailable, report the missing capability. Stop before generating files. Do not silently use a repository, Desktop, temporary directory, or remote service as the archive destination.
+Map the current host's tools to these semantic capabilities before reading an external export source or creating output. If neither host context nor a selected adapter can produce a faithful transcript, or writable Downloads access is unavailable, report the missing capability. Stop before generating files. Do not silently use a repository, Desktop, temporary directory, or remote service as the archive destination.
+
+## Downloads Permissions
+
+Use the host's existing authorization to run the commands below without asking for redundant confirmation. Uncertainty alone is not evidence that Downloads access is missing. If the host requires approval or a command is denied for permissions, use its supported approval flow for that operation and explain the failed command, path, and reason; stop if access remains unavailable. Do not bypass host restrictions or request broad access preemptively.
+
+A successful Markdown write does not establish permission for another command or the Downloads-root probe. Diagnose the actual failure: malformed JSON, invalid content, or a missing directory is not a reason to request broader permissions.
 
 ## Source Selection
 
-For the current conversation, build the lightweight transcript from the readable current conversation context supplied by the host. Codex rollout JSONL and official ChatGPT exports are optional source adapters for higher-fidelity input; they are not general prerequisites. Stop if neither the host context nor a selected adapter can produce a trustworthy transcript, and never present a retrospective as the original transcript.
-
-Without readable host context or a selected optional adapter that can produce a faithful original transcript, stop and report the limitation.
+For the current conversation, build the lightweight transcript from the readable current conversation context supplied by the host. Codex rollout JSONL and official ChatGPT exports are optional source adapters for higher-fidelity input; they are not general prerequisites. Never present a retrospective as the original transcript.
 
 ## Workflow
 
@@ -41,7 +43,7 @@ Without readable host context or a selected optional adapter that can produce a 
    python3 "$SKILL_DIR/scripts/archive_conversation.py" preflight
    ```
 
-   It probes read/write access to the existing Downloads directory without retaining probe files. Stop on a nonzero exit. The default archive destination is `~/Downloads/YYYY-MM-DD Archived AI Conversations/`, using the local date. Use `--downloads-dir` only for the actual Downloads location on another host, an explicitly requested destination, or a disposable test fixture.
+   It creates, reads, and removes a temporary probe in the existing Downloads root; `save` repeats this check before writing to the daily subdirectory. Stop on a nonzero exit. The default archive destination is `~/Downloads/YYYY-MM-DD Archived AI Conversations/`, using the local date. Use `--downloads-dir` only for the actual Downloads location on another host, an explicitly requested destination, or a disposable test fixture.
 3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought. Prepare a UTF-8 JSON object following [the input contract](references/script-usage.md). The model supplies the faithful `messages`, short `title`, and seven retrospective sections. The script generates headings and the `## 原文记录` link.
 4. Use readable current context first. Optional source adapters may be used only when the host context is insufficient and an export source is explicitly available. Export into a safe temporary staging directory, then select the exact source and turn its transcript into the JSON `messages` array:
 
@@ -78,14 +80,3 @@ Without readable host context or a selected optional adapter that can produce a 
 - Only `## 用户` and `## AI` may be level-two transcript headings. Normalize other headings outside code to `###`.
 - Omit tool calls, raw arguments/results, and long pasted material unless forensic detail is requested.
 - Preserve useful wording; never paste the transcript into the retrospective.
-
-## Common Mistakes
-
-| Mistake | Fix |
-| --- | --- |
-| Missing Downloads access | Report the access gap before generating files. |
-| Treating saved Markdown as temporary output | Retain both files in the daily Downloads directory. |
-| Host cannot archive conversations | Finish file verification, then request manual closing. |
-| Supported conversation left to the user | Call the archival tool after both saved files pass verification. |
-| Wrong conversation targeted | Use the retained source/host IDs. |
-| Partial result followed by closing | Keep the conversation active until every check passes. |

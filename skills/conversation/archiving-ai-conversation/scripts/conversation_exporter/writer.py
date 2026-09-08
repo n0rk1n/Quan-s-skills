@@ -4,10 +4,7 @@ from pathlib import Path
 
 from conversation_exporter.model import Conversation
 from conversation_exporter.renderers.markdown import render_conversation
-from conversation_exporter.utils import sanitize_filename, short_id
-
-
-DEVONTHINK_SUFFIXES = (".dtBase2", ".dtSparse", ".dtArchive")
+from conversation_exporter.utils import DEVONTHINK_SUFFIXES, sanitize_filename, short_id
 
 
 class UnsafeOutputPathError(ValueError):
@@ -40,7 +37,7 @@ def _assert_safe_output_dir(out_dir: Path, protected_roots: list[Path]) -> None:
         resolved_root = root.resolve(strict=False)
         if _is_inside_devonthink_package(resolved_root):
             continue
-        if root.exists() and root.is_dir() and _is_relative_to(resolved_out, resolved_root):
+        if root.exists() and root.is_dir() and resolved_out.is_relative_to(resolved_root):
             raise UnsafeOutputPathError(f"Refusing to write inside source input directory: {out_dir}")
         if root.exists() and root.is_file() and resolved_out == resolved_root.parent:
             raise UnsafeOutputPathError(f"Refusing to write next to source input file: {out_dir}")
@@ -48,14 +45,6 @@ def _assert_safe_output_dir(out_dir: Path, protected_roots: list[Path]) -> None:
 
 def _is_inside_devonthink_package(path: Path) -> bool:
     return any(part.endswith(DEVONTHINK_SUFFIXES) for part in path.parts)
-
-
-def _is_relative_to(path: Path, parent: Path) -> bool:
-    try:
-        path.relative_to(parent)
-    except ValueError:
-        return False
-    return True
 
 
 def _unique_path(conversation: Conversation, out_dir: Path, used_names: set[str]) -> Path:

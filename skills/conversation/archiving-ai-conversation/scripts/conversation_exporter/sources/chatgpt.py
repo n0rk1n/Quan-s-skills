@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from conversation_exporter.model import Conversation, ExportWarning, Message, ParseResult
+from conversation_exporter.utils import derive_title as _derive_title
 from conversation_exporter.utils import plain_text_from_parts, to_iso_datetime
 
 
@@ -105,10 +106,3 @@ def _parse_message(message: dict[str, Any] | None) -> Message | None:
     if not text:
         return None
     return Message(role=role, content=text, created_at=to_iso_datetime(message.get("create_time")))
-
-
-def _derive_title(messages: list[Message], fallback: str) -> str:
-    for message in messages:
-        if message.role == "user" and message.content.strip():
-            return message.content.strip().splitlines()[0][:60]
-    return fallback

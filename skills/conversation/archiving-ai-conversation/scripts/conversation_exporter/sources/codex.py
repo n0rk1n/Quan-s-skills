@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 from conversation_exporter.model import Conversation, ExportWarning, Message, ParseResult, ToolCall
-from conversation_exporter.utils import plain_text_from_parts, to_iso_datetime, truncate_text
+from conversation_exporter.utils import derive_title as _derive_title
+from conversation_exporter.utils import DEVONTHINK_SUFFIXES, plain_text_from_parts, to_iso_datetime, truncate_text
 
 
-DEVONTHINK_SUFFIXES = (".dtBase2", ".dtSparse", ".dtArchive")
 TOOL_CALL_TYPES = {"function_call", "custom_tool_call", "tool_search_call", "web_search_call"}
 TOOL_OUTPUT_TYPES = {"function_call_output", "custom_tool_call_output", "tool_search_output"}
 TOOL_NAME_BY_TYPE = {
@@ -252,13 +252,6 @@ def _content_to_text(content: Any) -> str:
                 pieces.append(plain_text_from_parts(item))
         return "\n".join(piece for piece in pieces if piece)
     return plain_text_from_parts(content)
-
-
-def _derive_title(messages: list[Message], fallback: str) -> str:
-    for message in messages:
-        if message.role == "user" and message.content.strip():
-            return message.content.strip().splitlines()[0][:60]
-    return fallback
 
 
 def _id_from_path(path: Path) -> str:

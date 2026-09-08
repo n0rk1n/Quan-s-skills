@@ -5,6 +5,11 @@ from typing import Any
 import json
 import re
 
+from conversation_exporter.model import Message
+
+
+DEVONTHINK_SUFFIXES = (".dtBase2", ".dtSparse", ".dtArchive")
+
 
 UNSAFE_FILENAME_RE = re.compile(r"[\\/:*?\"<>|]+")
 BLOCK_PREFIX_RE = r"(?:(?: {0,3}>[ \t]?)|(?:[ \t]*(?:[-+*]|\d+[.)])[ \t]+))*"
@@ -154,3 +159,10 @@ def truncate_text(value: Any, limit: int = 800) -> str:
     if len(text) <= limit:
         return text
     return text[:limit] + "..."
+
+
+def derive_title(messages: list[Message], fallback: str) -> str:
+    for message in messages:
+        if message.role == "user" and message.content.strip():
+            return message.content.strip().splitlines()[0][:60]
+    return fallback
