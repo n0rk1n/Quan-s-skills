@@ -19,9 +19,9 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 
 **Bilibili list skills** (`archiving-bilibili-favorites`, `archiving-bilibili-following`) require:
 - Authenticated browser automation that can inspect and operate the signed-in session, match stable content IDs, and verify removals.
-- Writable local filesystem access to `~/Downloads`, image downloads with bounded retries, and actual image MIME verification (`curl` and `file`, or equivalent host capabilities).
+- Writable local filesystem access to `~/Downloads`, Python 3.10+, `curl`, and `file` for the bundled `scripts/archive_bilibili.py` CLI.
 
-They stop safely before observing the source list if either capability is unavailable. Each dated batch contains `archive.json`, one ID directory per item with `record.md` and its downloaded image, and `summary.md`. All records and images must pass read-back verification before any unfavorite/unfollow action. Image failures stop cleanup for the whole batch.
+They stop safely before observing the source list if either capability is unavailable. Each dated batch contains `archive.json`, one ID directory per item with `record.md` and its downloaded image, and `summary.md`. All records and images must pass read-back verification before any unfavorite/unfollow action. Image failures stop cleanup for the whole batch. Both independently installable skills bundle the same CLI for preflight, archive, verify, resume, and status/summary updates. Browser automation supplies observed JSON and cleanup evidence; the script never performs account actions. Read each skill’s `references/script-usage.md` for schemas and commands.
 
 Bilibili archives use `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch NN/` or `~/Downloads/YYYY-MM-DD Archived Bilibili Following Batch NN/`. Image saving is built into both archive skills; the former standalone cover skill has been removed. Existing archives are not migrated. Installed copies are separate from this repository: when updating an installation, replace both complete archive skill directories and remove the obsolete cover skill directory from that host’s skill discovery path.
 
