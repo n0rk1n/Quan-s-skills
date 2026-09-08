@@ -4,32 +4,31 @@
 
 Map host tools by semantic capability, not by exact name.
 
-1. Confirm the Skill was explicitly invoked, a signed-in browser is available, Python 3 can run the bundled archive script, and `/Users/oriki/Downloads` is writable.
-2. Let `scripts/archive_douyin_favorites.py` create or reuse `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`, where `YYYY-MM-DD` is the current local date.
-3. Use a default batch size of 24 unless the user explicitly specifies another size. Observe only that bounded batch and record each stable content ID, content type, canonical URL, concise title, visible author, and visible page caption.
-4. Pass the bounded batch as JSON on standard input to `scripts/archive_douyin_favorites.py`, or use `--input <batch-json>` for a large batch or an interactive terminal. Keep any input file outside the dated archive directory; do not manually write archive files.
-5. Require exit code 0, an empty `failed_items` list, and `verified_ids` equal to the full observed batch before any destructive action.
-6. Unfavorite the exact verified archived IDs: select only those IDs, inspect Douyin's final confirmation dialog, and submit only if its displayed scope and count match the current submission ID set.
-7. Reload, wait for lazy loading, and verify every archived ID submitted for cleanup.
-8. Report the absolute destination, verified page/detail pair count, verified removals, and unresolved IDs. Stop if requested.
+1. Confirm explicit invocation, authenticated browser automation, Python 3, `file`, `sips`, HTTPS access to observed cover URLs, and writable local filesystem access to `/Users/oriki/Downloads`.
+2. Observe one bounded batch: 24 favorites by default, or the user's requested count. Record stable ID, type, canonical URL, concise content title, and the actual cover URL associated with that ID.
+3. Pass the batch to `scripts/archive_douyin_favorites.py`; it creates or reuses `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites` with the current local date.
+4. Require exit code 0, empty `failed_items`, and `verified_ids` equal to the entire observed batch before cleanup.
+5. Unfavorite the exact verified archived IDs, following the selection, confirmation dialog, and delayed verification gates below.
+6. Report destination, verified link/cover count, verified removals, and unresolved IDs. Stop after this batch.
 
-Never reorder these gates: `verify browser, Python, and Downloads access → observe → run archive script → accept complete verified_ids → select exact archived IDs → inspect dialog → unfavorite → delayed verify`.
+Never reorder: `verify capabilities → observe → run archive script → accept complete verified_ids → select exact archived IDs → inspect dialog → unfavorite → delayed verify`.
+
+## Collecting Covers
+
+Use authenticated browser evidence to associate each cover with its stable content ID. Read the actual image source from the matching favorite card or video page (for example its image source or video poster). For a note, use the visible first-image cover. Wait for lazy-loaded images and reject placeholders, avatars, unrelated recommendations, and guessed URLs. Preserve the full observed HTTPS URL, including query parameters. Do not reconstruct CDN addresses or save a screenshot in place of the cover.
+
+If no trustworthy cover URL can be obtained, stop and report the unresolved ID. Do not fall back to a detail file and do not clean up the batch. If an image request fails, refresh the same item's browser evidence and retry with its newly observed URL; do not bypass login, CAPTCHA, access controls, or rate limits. The script uses a Douyin Referer and a browser User-Agent, but does not extract browser cookies or guarantee access to every CDN URL.
 
 ## Archive Script Contract
 
-Resolve the skill directory for the current installation, then run:
+Run Python 3 with the installed skill's helper:
 
 ```text
 python3 <skill-directory>/scripts/archive_douyin_favorites.py
-```
-
-Pass one JSON object containing a non-empty `items` array through standard input. For a large batch or an interactive terminal, use:
-
-```text
 python3 <skill-directory>/scripts/archive_douyin_favorites.py --input <batch-json>
 ```
 
-The file and stdin forms have the same validation and result contract. Do not save an input manifest inside the dated archive directory. Each item has this shape:
+Both forms accept one JSON object with a non-empty `items` array. Keep an input file outside the dated archive directory. Each item is:
 
 ```json
 {
@@ -37,14 +36,15 @@ The file and stdin forms have the same validation and result contract. Do not sa
   "type": "video",
   "url": "https://www.douyin.com/video/7530000000000000001",
   "title": "基于页面内容的简洁标题",
-  "author": "页面可见作者",
-  "caption": "页面可见文案"
+  "cover_url": "https://<observed-cover-host>/<observed-image-path>"
 }
 ```
 
-The script validates the whole input batch before creating the dated directory. It rejects duplicate IDs, duplicate canonical URLs, mismatched content types, short links, author links, queries, fragments, and malformed dates. It sanitizes titles, creates XML `.webloc` files, renders Chinese detail Markdown, protects unrelated files and conflicting/incomplete existing pairs, writes atomically, and reads each pair back.
+Replace the illustrative cover URL with the real browser-observed URL. Canonical URLs must be exactly `https://www.douyin.com/video/<id>` or `https://www.douyin.com/note/<id>`; type and ID must agree. Duplicate IDs, noncanonical URLs, and missing or non-HTTPS cover URLs fail validation before directory creation.
 
-The script prints one JSON result:
+The script downloads each cover with a 30-second request timeout and a 20 MiB limit. It checks actual MIME with `file` and readable nonzero dimensions with macOS `sips`, then uses the detected jpg/png/webp/gif extension. It writes atomically and rechecks both files before adding the ID to `verified_ids`. MIME and dimensions are technical checks; the browser observation must establish that the picture belongs to the item.
+
+The JSON result is:
 
 ```json
 {
@@ -55,67 +55,28 @@ The script prints one JSON result:
 }
 ```
 
-Exit code 0 means every item passed write/read-back verification. Exit code 1 means one or more per-item file conflicts or failures occurred; preserve successful files, report the failures, and do not clean up the batch. Exit code 2 means the JSON, batch, URL, ID, type, date, or destination precondition is invalid. Never infer success from file presence alone or add an ID to `verified_ids` outside the script result.
+Exit 0 means the complete batch passed verification. Exit 1 means item failures: preserve completed files, report failures, and do not clean up any of the batch. Exit 2 means invalid input or destination preconditions. Never infer success from file presence or extend `verified_ids` manually.
 
-## Local Destination
+## Local Files and Reuse
 
-Use this exact daily directory:
+The exact daily destination is `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`. Do not use a repository, Desktop, temporary directory, cloud drive, or other substitute for real archives. Temporary test fixtures are separate from real archival runs.
 
-```text
-/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites
-```
-
-The English phrase is fixed: `Archived DouYin Favorites`. Replace only `YYYY-MM-DD` with the current local date. Do not redirect output to a repository, Desktop, temporary directory, iCloud, or another location.
-
-The script creates the directory if it does not exist and reuses it for the same day when safe. Never delete, truncate, rename, or overwrite an unrelated existing file. Repeat invocations identify an existing item through the canonical URL in its `.webloc` file and the matching content ID and URL in its detail file. Legacy pairs whose filenames contain `--<content-id>` remain readable and reusable, but new files never use that suffix.
-
-Stop before observing favorites if the destination cannot be created, listed, written, or read back. A successful write call alone is not verification.
-
-## Collecting a Batch
-
-Use a batch size of 24 by default unless the user specifies another size; reduce it only when the page state cannot expose that many stable content IDs reliably. Record each card's stable content ID, content type (`video` or `note`), canonical URL, concise title, visible author, and visible caption. Do not identify a destructive target by card position, visible order, “first N,” or a broad page selection.
-
-Do not bypass login, CAPTCHA, access controls, rate limits, or platform safeguards. Stop if the session or page state is not trustworthy. Do not pre-read another batch after the user asks to stop.
-
-## Per-Favorite File Contract
-
-The script turns each favorite into exactly two files in the dated folder, using the same filesystem-safe base name for both:
+Each new favorite produces exactly two files:
 
 ```text
 <concise-content-title>.webloc
-<concise-content-title> 详情.md
+<concise-content-title> 封面.jpg
 ```
 
-If another item already uses the same safe title, append a short numeric suffix to both files, beginning with ` (2)`, then ` (3)`, while keeping their base names identical.
+The cover extension reflects its actual format. Use the same filesystem-safe title for both. Resolve unrelated title collisions with ` (2)`, ` (3)`, etc. New filenames omit long content IDs. The `.webloc` is an XML property list whose `URL` is the exact canonical URL, preserving the ID without a separate metadata file.
 
-The `.webloc` file is an XML property list whose `URL` value is exactly one canonical URL:
-
-```text
-https://www.douyin.com/video/<id>
-https://www.douyin.com/note/<id>
-```
-
-Its `<id>` must match the archived content ID recorded in the detail file. The filename does not contain the content ID. Do not replace the original Douyin URL with a search result, short link, author page, or reconstructed noncanonical URL.
-
-The title must describe the favorite's main content, not only the author, ID, index, or generic text such as `DouYin Favorite 01`. Replace `/`, `:`, and other filename separators or control characters, trim trailing periods/spaces, and keep the title concise. If visible content is sparse, use the best visible label. Resolve a same-title collision with the short numeric suffix; never expose the long content ID in a new filename.
-
-The `详情.md` file has no headings. It contains exactly five list items, with one blank line between adjacent items:
-
-- content ID;
-- content type;
-- canonical URL;
-- visible author; and
-- visible page caption.
-
-Write detail-file labels in Simplified Chinese. Preserve identifiers and URLs exactly, and label a missing author or caption as `insufficient metadata`.
-
-Before cleanup, require the archive script's exit code 0 and compare its `verified_ids` with the browser-observed batch IDs. Preserve a one-to-one ID/URL mapping: every current-batch ID must map to exactly one readable `.webloc` and one readable metadata file with the same base name, and the URL and ID must agree across browser evidence, link file, and metadata. The verified count must equal the batch size. Stop on any mismatch.
+Do not create `详情.md`, summaries, or manifests in the archive directory. Existing legacy detail files remain untouched. Repeat invocations identify an existing item by the canonical URL in its `.webloc`, reuse that filename (including legacy ID suffixes), and add a missing cover. Existing valid cover/link pairs are verified and reused without downloading again. Multiple matching links, multiple covers, invalid existing covers, or conflicting legacy ID links are failures, not permission to overwrite. Preserve unrelated files.
 
 ## Cleanup Gate
 
-Cleanup proceeds only after the current batch's local archive passes all checks. An ID is archived only when its `.webloc` and matching `详情.md` file both exist, are readable, and preserve the matching content ID, content type, canonical URL, author, and page caption.
+Maintain a one-to-one ID/URL mapping between browser evidence and canonical link contents, and visually confirm the observed cover belongs to that same ID. An item is archived only when its link and matching cover both pass read-back verification. A link alone, a cover URL alone, or an old detail file is insufficient.
 
-Cleanup scope is the verified archived ID set from the current invocation. Do not ask for an extra confirmation solely because the cleanup step is destructive, but stop if the user says not to continue. A later batch or newly observed ID requires its own verified local files before it can be unfavorited.
+Only accept the complete batch's `verified_ids` with exit 0 and no failures. A cover failure blocks cleanup for the batch. Use the script for naming, downloading, writing, and verification rather than recreating its logic. Do not ask for extra confirmation solely for cleanup within an explicitly invoked archive run; respect a user stop immediately.
 
 ## Exact-ID Unfavorite Procedure
 
@@ -132,7 +93,7 @@ Submit only after both the selection and dialog gates match. If delayed verifica
 After each submission, reload the favorites view and wait for lazy-loaded favorite cards before checking every archived ID submitted for cleanup:
 
 ```text
-archived_ids = IDs from verified local archive pairs
+archived_ids = IDs from verified local link/cover pairs
 submit exact IDs
 reload and wait for lazy-loaded favorite cards
 remaining_ids = archived_ids still present
@@ -146,35 +107,3 @@ If the same remaining set persists across three attempts, stop and report it. Ne
 ## Stopping
 
 When the user says not to continue, stop before collecting or acting on another batch. Keep already written files and distinguish complete, partially successful, and unresolved batches. A later unrelated request must not implicitly resume this Skill.
-
-## Quick Reference
-
-| Need | Required action |
-| --- | --- |
-| Downloads unavailable | Stop before observing favorites. |
-| Default count omitted | Archive 24 favorites. |
-| Destination | `/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites`. |
-| Per favorite | One `.webloc` plus one matching `详情.md` file. |
-| Detail contents | ID, type, URL, author, and page caption only. |
-| Archive implementation | `scripts/archive_douyin_favorites.py` with batch JSON on stdin or `--input`. |
-| Cleanup | Only after verifying both local files for every exact archived ID. |
-
-## Common Mistakes
-
-- Redirecting output to another convenient directory when Downloads is unavailable.
-- Reimplementing filename, write, or verification logic instead of using the bundled script.
-- Treating exit code 1, `failed_items`, or a partial `verified_ids` list as permission to clean up.
-- Writing only `.webloc` links instead of a complete pair per favorite.
-- Adding headings, filenames, tags, status, summaries, facts, inferences, or cautions to `详情.md`.
-- Adding `--<content-id>` or another long content-ID suffix to a new filename.
-- Overwriting unrelated files already present in the daily directory.
-- Naming files by index or author only instead of the main content title.
-- Putting details in chat only instead of the matching detail file.
-- Unfavoriting first because cached data appears sufficient to rebuild the archive.
-- Selecting “the first N cards” instead of matching archived content IDs.
-- Counting files or unique URLs only after the destructive action.
-- Expanding cleanup to a newly observed ID that does not yet have a verified local pair.
-- Trusting a toast or immediate viewport without reload and lazy-loading delay.
-- Retrying all items, or adding newly observed IDs, after partial success.
-- Repeating an unfavorite action after delayed verification already shows the ID absent.
-- Continuing or pre-reading the next batch after the user says to stop.

@@ -149,7 +149,7 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertIn("semantic capability", workflow)
         self.assertIn("/Users/oriki/Downloads/YYYY-MM-DD Archived DouYin Favorites", workflow)
         self.assertIn(".webloc", workflow)
-        self.assertIn("详情.md", workflow)
+        self.assertIn("封面.jpg", workflow)
         self.assertIn("scripts/archive_douyin_favorites.py", workflow)
         self.assertIn("verified_ids", workflow)
         self.assertNotIn("DEVONthink", workflow)
@@ -160,7 +160,7 @@ class DouyinPortabilityTests(unittest.TestCase):
         self.assertNotIn("归档总结.md", workflow)
         self.assertNotIn("Summary Markdown File", workflow)
         self.assertIn(".webloc", workflow)
-        self.assertIn("详情.md", workflow)
+        self.assertIn("封面.jpg", workflow)
 
 
 class BilibiliPortabilityTests(unittest.TestCase):

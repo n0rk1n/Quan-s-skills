@@ -1,6 +1,6 @@
 ---
 name: archiving-douyin-favorites
-description: Use when explicitly invoked for a signed-in user's Douyin favorites, especially when the user wants preserved original URLs, local page links, structured detail files, or controlled cleanup.
+description: Use when explicitly invoked for a signed-in user's Douyin favorites, especially when the user wants preserved original URLs, local page links, local cover images, or controlled cleanup.
 ---
 
 # Archiving Douyin Favorites
@@ -13,11 +13,14 @@ Run this Skill only when the user explicitly names or invokes this skill through
 
 - authenticated browser automation that can inspect and operate the signed-in Douyin session, match stable content IDs, inspect the final dialog, reload, and perform delayed verification;
 - a writable local filesystem that can create and verify files under `/Users/oriki/Downloads`;
-- Python 3 capable of running the bundled `scripts/archive_douyin_favorites.py` standard-library CLI.
+- Python 3 capable of running the bundled `scripts/archive_douyin_favorites.py` standard-library CLI, plus macOS `file` and `sips` for image verification;
+- HTTPS access to the browser-observed cover image URLs.
 
-Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if either capability is unavailable; do not archive to a repository, Desktop, temporary directory, cloud drive, or another substitute destination.
+Map the current host's tools to these semantic capabilities before observing favorites. Stop before observing favorites if any required capability is unavailable; do not archive to a repository, Desktop, temporary directory, cloud drive, or another substitute destination.
 
 Before observing or acting on favorites, read [references/workflow.md](references/workflow.md) completely and follow every checklist item.
+
+New archives contain only a `.webloc` link and its matching cover image. Do not generate detail files. A missing or invalid cover blocks cleanup for the batch. Existing legacy detail files remain untouched.
 
 ## Safety Invariant
 

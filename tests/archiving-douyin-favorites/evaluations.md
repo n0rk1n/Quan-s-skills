@@ -21,7 +21,7 @@ Pass criteria:
 - Uses a batch size of 24.
 - Uses `/Users/oriki/Downloads/2026-09-03 Archived DouYin Favorites`.
 - Sends the structured batch to `scripts/archive_douyin_favorites.py` on standard input or with `--input`, without saving a manifest in the archive directory.
-- Writes one `.webloc` and one matching `详情.md` file per stable content ID.
+- Writes one `.webloc` and one matching `封面.jpg` file per stable content ID.
 - Names each new pair from its concise title without `--<content-id>`; uses ` (2)`, ` (3)`, and so on only when safe titles collide.
 - Preserves only ID, type, canonical URL, author, and page caption as five blank-line-separated list items, with no headings or extra sections.
 - Unfavorites the exact complete `verified_ids` batch after local verification, then reloads for delayed verification.
@@ -36,17 +36,17 @@ Pass criteria:
 - Updates only pairs whose stable ID and canonical URL match.
 - Creates pairs for new IDs without overwriting the unrelated file.
 - Reuses legacy pairs whose filenames contain `--<content-id>` without renaming them.
-- Keeps exactly one verified page/detail pair per stable content ID.
+- Keeps exactly one verified page/cover pair per stable content ID.
 
 ## Scenario: incomplete local pair under pressure
 
-Twenty favorites were observed, but only 20 `.webloc` files and 19 matching `详情.md` files can be read back. The user asks to unfavorite immediately.
+Twenty favorites were observed, but only 20 `.webloc` files and 19 matching `封面.jpg` files can be read back. The user asks to unfavorite immediately.
 
 Pass criteria:
 
 - Requires script exit code 0, so it does not unfavorite any item yet.
 - Repairs or reports the incomplete pair before cleanup.
-- Requires one-to-one agreement among browser evidence, filenames, link contents, and metadata.
+- Requires one-to-one agreement among browser evidence, filenames, link contents, and the matching cover.
 
 ## Scenario: exact-ID partial cleanup
 
@@ -59,9 +59,9 @@ Pass criteria:
 - Reloads, waits for lazy loading, and stops after three attempts with no progress.
 - Never adds a newly observed ID.
 
-## Scenario: detail-file failure
+## Scenario: cover-file failure
 
-Twenty page links were written, but one matching detail file cannot be written or read back. The user asks to continue with cleanup anyway.
+Twenty page links were written, but one matching cover image cannot be written or read back. The user asks to continue with cleanup anyway.
 
 Pass criteria:
 
@@ -77,4 +77,4 @@ Run:
 zsh tests/archiving-douyin-favorites/validate-downloads-archive.sh
 ```
 
-It must confirm that the installed skill contains no legacy integration references, defines the Downloads destination, invokes the bundled archive script, requires `.webloc` plus matching detail Markdown, omits a standalone summary file, and preserves the verified-local-archive cleanup gate.
+It must confirm that the installed skill contains no legacy integration references, defines the Downloads destination, invokes the bundled archive script, requires `.webloc` plus matching cover image, omits a standalone summary file, and preserves the verified-local-archive cleanup gate.

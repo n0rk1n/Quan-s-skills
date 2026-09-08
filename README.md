@@ -12,7 +12,7 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 | Bilibili | `skills/bilibili/adding-bilibili-covers-to-devonthink` | `adding-bilibili-covers-to-devonthink`: Add paired cover records for Bilibili video bookmarks in DEVONthink. |
 | Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40. |
 | Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24. |
-| Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into a dated folder under `/Users/oriki/Downloads`, with one local page link and matching detail file per item before any confirmed exact-ID cleanup. |
+| Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into a dated folder under `/Users/oriki/Downloads`, with one local page link and matching cover image per item before any confirmed exact-ID cleanup. |
 | Conversation | `skills/conversation/creating-conversation-handoffs` | `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.oriki/handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `oriki-handoffs/` and `.codex/handoffs/` indexes remain readable. |
 | Conversation | `skills/conversation/resuming-from-conversation-handoff` | `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work. |
 
@@ -27,7 +27,7 @@ They stop safely before observing the source list if either capability is unavai
 **Douyin favorites** (`archiving-douyin-favorites`) requires:
 
 - Authenticated browser automation with the same exact-ID and delayed-removal verification safeguards.
-- Writable local filesystem access to `/Users/oriki/Downloads` for the dated archive directory, `.webloc` page links, and matching detail Markdown files.
+- Writable local filesystem access to `/Users/oriki/Downloads` for the dated archive directory, `.webloc` page links, and matching cover images (verified with macOS `file` and `sips`).
 - Python 3 for the bundled `scripts/archive_douyin_favorites.py` writer and read-back verifier.
 
 It stops safely before observing favorites if either capability is unavailable.
