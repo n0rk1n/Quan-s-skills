@@ -1,27 +1,49 @@
 # Bilibili 收藏归档与取消收藏流程
 
-## Workflow Checklist
-
-Map host tools by semantic capability, not by exact name. Names such as `mcp__devonthink.get_databases`, `mcp__devonthink.create_record`, and `mcp__devonthink.lookup_records` are non-normative examples; use equivalent DEVONthink MCP operations exposed by the current host.
-
 ## 必经检查
 
-1. 确认技能被显式调用、浏览器已登录 Bilibili、DEVONthink MCP 可列出可写 Inbox 数据库。任一项失败即停止；不得使用本地文件、AppleScript 或数据库包作为替代。
-2. 在 Inbox 中创建本次专用分组：`YYYY-MM-DD Archived Bilibili Favorites Batch NN`。先列出现有子项，计算下一个 `NN`，创建后确认返回的 UUID 是新分组。
-3. 按页面顺序读取视频卡片，直到取得 40 个唯一且稳定的 BV ID/canonical URL 对，或确认已到当前收藏夹末尾。不得把尚未完成懒加载误判为末尾。令 `available_stable_items` 为已取得的稳定身份数，`batch_size = min(40, available_stable_items)`。若 `batch_size` 为 1–39，继续归档当前全部稳定条目；若为 0，停止且不更改收藏状态。记录每条的 BV ID、URL、可见标题、可见封面 URL 与可见元数据。不可把卡片索引当作取消收藏的身份，也不可用身份不稳定的卡片补足数量。
+Map host tools by semantic capability, not exact name. 需要已登录浏览器自动化、本地文件写入与读回、图片下载与实际 MIME 检查能力。
+
+1. 确认技能被显式调用、浏览器已登录，并验证 `~/Downloads` 可写且能读回文件；先展开真实用户主目录，不能把 `~` 当作字面目录。能力不足即停止，不观察列表，不操作账号。遇登录验证、验证码或限流时停止，不绕过平台限制。
+2. 列出 Downloads 中同日同类型批次，计算下一个 `NN`（从 01 起）。用排他创建方式建立 `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch NN/`，日期取当前本地日期。若冲突则递增 NN 重试，绝不覆盖或合并历史目录；确认真实路径位于 Downloads 内。记录绝对路径。
+3. 按页面顺序读取当前收藏夹，直到取得 40 个唯一且稳定的 BV ID/canonical URL 对，或确认到达当前收藏夹末尾。不得把懒加载误判为末尾。令 `batch_size = min(40, available_stable_items)`；1–39 条也继续，0 条停止且不改变收藏状态。不从其他收藏夹或不稳定卡片补齐。记录可见标题、封面 URL、可见元数据及页面顺序。
+4. 固定本批身份清单；标题、账号名、图片和卡片索引均不是身份键。图片失败不递补，不扩大本批范围。
+
+## 本地归档格式
+
+批次根目录保存 `archive.json` 和最终的 `summary.md`。每条使用稳定 BV ID 建立独立子目录：
+
+```text
+YYYY-MM-DD Archived Bilibili Favorites Batch NN/
+  archive.json
+  <BV_ID>/
+    record.md
+    cover.<ext>
+  summary.md
+```
+
+视频身份必须符合 `BV[0-9A-Za-z]{10}`；拒绝路径分隔符、点目录和越界路径。目录名不采用标题，重复标题或非法文件名字符不会覆盖记录；Markdown 中保留原始显示名。每个技能目录独立可安装，无需其他技能。
+
+`archive.json` 是 UTF-8 JSON，包含来源页面、创建时间、批次路径、固定的 `archived_ids` 和 `items` 数组。每项包含 `id`、`canonical_url`、`display_name`、可见元数据、`tags`（`Bilibili`、`Bilibili Favorites`）、`image_source_url`、实际下载 URL、`image_path`、`image_mime`、`record_path`、`archive_status`、`cleanup_status` 和失败原因。图片路径、记录路径均相对批次目录。`archived_ids` 只记录固定目标集，不代表核验已通过；仅在整个批次归档闸门通过后才可用于清理。
+
+每个 `record.md` 写入来源、BV ID、canonical URL `https://www.bilibili.com/video/<BV_ID>`、显示名、可见元数据、标签、原始封面 URL、实际本地图片相对链接及状态。缺失普通元数据写 `insufficient metadata`；缺少真实封面 URL 则是归档失败。用 Markdown 编码/转义处理名称和 URL，使本地图片链接可解析。保存临时文件后在同目录原子重命名，读回最终文件。首次写入不能覆盖已有文件；重试仅可复用本批且 ID/URL 完全匹配的记录。
+
+## 下载与图片验证（归档内执行）
+
+1. 从已观察页面的对应卡片读取实际封面地址（例如已加载图片的 `currentSrc`）；懒加载占位图不算。仅使用该条已观察到的真实 HTTP(S) URL，协议相对地址补为 HTTPS。不猜测资源路径，不把 `insufficient metadata` 当 URL。此处只下载封面，不下载视频媒体。
+2. 下载到对应 ID 子目录的临时文件。使用 `curl --fail --location --connect-timeout 15 --max-time 60 --retry 2 --proto '=http,https' --proto-redir '=http,https' --output "$temporary_image" "$observed_image_url"`，或有等价错误检查及超时的宿主下载能力。变量来自结构化数据，按参数传递，不将网页文本拼成可执行 shell 代码。
+3. 只有 `i0.hdslb.com` 的 TLS 失败才允许用 URL 解析器将主机精确替换为 `i1.hdslb.com`，保留路径和查询字符串后再尝试一次，并记录实际下载地址；禁止关闭 TLS 校验。其他失败按失败项处理。
+4. 要求文件非空，用 `file --mime-type` 检查实际内容；只接受 `image/jpeg`、`image/png`、`image/webp`、`image/gif`，对应扩展名 `jpg`、`png`、`webp`、`gif`。不相信 URL 扩展名或响应 Content-Type，不接受 HTML 错误页。
+5. 验证后原子重命名为 `cover.<ext>`，读回最终文件并再次核对 MIME 和非空大小；记录路径必须在本条 ID 目录内。已有已验证图片可在本批重试时复用，不产生第二张配对图片，不覆盖身份不符的文件。
+6. 图片失败时保留已完成的有效文件，将失败阶段和原因写入 `archive.json`，不把临时文件当图片成功，不用后续条目递补。整批停止在归档闸门前，绝不取消收藏；报告 partial/unresolved。
 
 ## 归档闸门
 
-为每一条创建一个 DEVONthink `bookmark`：
+逐项从磁盘重新读取 `archive.json`、`record.md` 与最终图片，要求：
 
-- `url`：`https://www.bilibili.com/video/<BV_ID>`；
-- `name`：可见视频标题；
-- `tags`：`Bilibili`、`Bilibili Favorites`，可加有依据的主题标签；
-- `comment`：来源、BV ID、canonical URL、可见标题、可见封面 URL、缺失字段标为 `insufficient metadata`，以及状态 `已归档；待取消收藏`。
+`record count = BV ID count = canonical URL count = unique canonical URL count = verified image count = batch_size`。
 
-创建前按 URL 查询本分组，避免重复。创建后必须验证：bookmark 数、BV ID 数、URL 数和唯一 URL 数均为 `batch_size`；每个 bookmark 的 URL、备注、标签和 BV ID 一一对应。任一项不等即停止，绝不取消收藏。
-
-若 MCP 没有写入 bookmark 缩略图的操作，不得声称已设置缩略图；仅在备注保存可见封面 URL。
+固定身份集、清单、记录内身份与 URL、图片来源及本地路径必须一一对应（one-to-one mapping），所有路径存在且在本批目录内，图片通过非空和实际 MIME 核验；不得只凭工具返回成功或 URL 已写入宣称完成。任一项不等即停止，整批不得取消收藏。使用各自独立的身份、canonical URL 与图片来源逐项核验；即使两条记录的图片 URL 相同，也各自保留一份本地图片。完整核验后将状态写为 `状态：已归档；待取消收藏` 并读回确认，再进入清理闸门。图片下载前不能使用“已归档”状态。
 
 ## 取消收藏闸门（归档核验通过后自动执行）
 
@@ -33,20 +55,24 @@ Map host tools by semantic capability, not by exact name. Names such as `mcp__de
 4. 提交后重新加载收藏页，等待懒加载，并重新计算 `remaining_ids = archived_ids` 中仍出现的 ID。成功提示或数字变化不构成最终验证；已经核验消失的 ID 不得再次提交。
 5. 若 `remaining_ids` 非空，最多只对同一已验证归档集中的剩余项重试；同一剩余集连续三次无进展即停止。不得带入新卡片或下一批。
 
-将已验证移除的 bookmark 状态改为 `已归档；已取消收藏（页面重新加载后核验）`；未移除项标明 `partial/unresolved`。
+将已验证移除的本地记录 状态改为 `已归档；已取消收藏（页面重新加载后核验）`；未移除项标明 `partial/unresolved`。
 
 ## 总结与交付
 
-在相同分组创建一份简体中文 Markdown 总结，包含：目标位置、`batch_size`、可见证据与限制、本批全部标题及 URL、取消收藏结果、未解决项，以及缩略图能力限制。验证总结位于同一分组、覆盖本批全部 URL，并且状态与 bookmark 一致后再报告完成。
+在相同批次目录创建一份简体中文 Markdown 总结 `summary.md`，包含：目标位置、`batch_size`、可见证据与限制、本批全部标题及 URL、取消收藏结果、未解决项，以及本地封面路径、下载与 MIME 核验结果。验证总结位于同一批次目录、覆盖本批全部 URL，并且状态与本地记录一致后再报告完成。
 
-If summary creation or verification fails, preserve verified bookmarks and cleanup state, report partial completion, and do not claim full completion.
+If summary creation or verification fails, preserve verified files and cleanup state, report partial completion, and do not claim full completion.
 
 ## 常见错误
 
 | 错误 | 正确做法 |
 | --- | --- |
 | 直接勾选“本页全选” | 先证明页面所选 URL 集与 `archived_ids` 完全一致且数量等于 `batch_size`；否则按 BV ID 逐项选择。 |
-| 先取消、后归档 | 先完成 `batch_size` 个 bookmark 的一对一核验。 |
+| 先取消、后归档 | 先完成 `batch_size` 个本地记录的一对一核验。 |
 | 相信取消成功提示 | 重新加载并核验全部 `archived_ids`。 |
 | 不足 40 条就停止 | 已确认到达收藏夹末尾且 `batch_size` 为 1–39 时，处理当前全部稳定条目。 |
 | 扩大到下一批 | 单次调用最多处理 40 条；不足 40 时不得从其他收藏夹或不稳定卡片补足。 |
+
+## 状态一致性
+
+每次清理及重试后，用同目录临时文件加原子替换更新 `archive.json` 和对应 `record.md` 的状态，并读回检查一致性。写入或核验失败时立即停止后续清理，保留文件，报告已发生的账号操作和未解决 ID。总结必须覆盖固定批次全部 ID、链接、图片路径、成功/失败状态和重试次数；总结失败仅能报告部分完成。用户叫停时不继续下载或清理；单次调用结束后不自动开始下一批。

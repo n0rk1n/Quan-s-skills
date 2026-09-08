@@ -9,9 +9,8 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 | Category | Repository path | Skill |
 | --- | --- | --- |
 | Conversation | `skills/conversation/archiving-ai-conversation` | `archiving-ai-conversation`: Save an AI conversation to Downloads as a concise Chinese Markdown retrospective plus a separate original transcript Markdown file. |
-| Bilibili | `skills/bilibili/adding-bilibili-covers-to-devonthink` | `adding-bilibili-covers-to-devonthink`: Add paired cover records for Bilibili video bookmarks in DEVONthink. |
-| Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Archive and safely unfavorite Bilibili favorites in fixed batches of 40. |
-| Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Archive and safely unfollow Bilibili accounts in fixed current-page batches of 24. |
+| Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Save video records and cover images to Downloads, then safely unfavorite one batch of up to 40. |
+| Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Save account records and avatar images to Downloads, then safely unfollow one current-page batch of 24. |
 | Douyin | `skills/douyin/archiving-douyin-favorites` | `archiving-douyin-favorites`: Archive explicitly selected Douyin favorites into a dated folder under `/Users/oriki/Downloads`, with one local page link and matching detail file per item before any confirmed exact-ID cleanup. |
 | Conversation | `skills/conversation/creating-conversation-handoffs` | `creating-conversation-handoffs`: Create a validated timestamped snapshot and stable `.oriki/handoffs/LATEST.md` index before continuing in a new conversation; create that directory when absent, while existing `oriki-handoffs/` and `.codex/handoffs/` indexes remain readable. |
 | Conversation | `skills/conversation/resuming-from-conversation-handoff` | `resuming-from-conversation-handoff`: Read a handoff, recheck mutable state, and continue the first unblocked step without repeating completed work. |
@@ -20,9 +19,11 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 
 **Bilibili list skills** (`archiving-bilibili-favorites`, `archiving-bilibili-following`) require:
 - Authenticated browser automation that can inspect and operate the signed-in session, match stable content IDs, and verify removals.
-- DEVONthink MCP operations that can discover Global Inbox and create, look up, update, tag, and verify groups and records.
+- Writable local filesystem access to `~/Downloads`, image downloads with bounded retries, and actual image MIME verification (`curl` and `file`, or equivalent host capabilities).
 
-They stop safely before observing the source list if either capability is unavailable.
+They stop safely before observing the source list if either capability is unavailable. Each dated batch contains `archive.json`, one ID directory per item with `record.md` and its downloaded image, and `summary.md`. All records and images must pass read-back verification before any unfavorite/unfollow action. Image failures stop cleanup for the whole batch.
+
+Bilibili archives use `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch NN/` or `~/Downloads/YYYY-MM-DD Archived Bilibili Following Batch NN/`. Image saving is built into both archive skills; the former standalone cover skill has been removed. Existing archives are not migrated. Installed copies are separate from this repository: when updating an installation, replace both complete archive skill directories and remove the obsolete cover skill directory from that host’s skill discovery path.
 
 **Douyin favorites** (`archiving-douyin-favorites`) requires:
 

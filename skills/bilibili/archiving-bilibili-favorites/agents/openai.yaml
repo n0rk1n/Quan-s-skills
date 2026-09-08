@@ -1,4 +1,4 @@
 interface:
   display_name: "归档哔哩哔哩收藏"
-  short_description: "安全归档并取消收藏，每批最多 40 条。"
-  default_prompt: "Use the archiving-bilibili-favorites skill to archive and cancel up to 40 Bilibili favorites; if fewer are available, process all stable items in the current folder."
+  short_description: "保存视频资料和封面到 Downloads，再取消收藏，每批最多 40 条。"
+  default_prompt: "Use the archiving-bilibili-favorites skill to save video records and cover images to Downloads, verify them, and then cancel up to 40 Bilibili favorites; if fewer are available, process all stable items in the current folder."

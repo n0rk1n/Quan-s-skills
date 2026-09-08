@@ -1,9 +1,11 @@
 #!/bin/sh
 set -eu
 
-skill="archiving-bilibili-favorites/SKILL.md"
-workflow="archiving-bilibili-favorites/references/workflow.md"
-agent="archiving-bilibili-favorites/agents/openai.yaml"
+repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+
+skill="$repo_root/skills/bilibili/archiving-bilibili-favorites/SKILL.md"
+workflow="$repo_root/skills/bilibili/archiving-bilibili-favorites/references/workflow.md"
+agent="$repo_root/skills/bilibili/archiving-bilibili-favorites/agents/openai.yaml"
 
 # The skill must define one dynamic batch: all currently available stable items,
 # capped at 40. A non-empty short batch must remain eligible for the full flow.

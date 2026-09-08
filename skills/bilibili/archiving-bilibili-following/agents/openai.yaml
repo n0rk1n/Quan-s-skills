@@ -1,4 +1,4 @@
 interface:
   display_name: "归档哔哩哔哩关注"
-  short_description: "Archive and safely unfollow Bilibili accounts."
-  default_prompt: "Use the archiving-bilibili-following skill to archive and unfollow my next 24 Bilibili accounts."
+  short_description: "保存账号资料和头像到 Downloads，核验后取消关注，每批 24 个。"
+  default_prompt: "Use the archiving-bilibili-following skill to save records and avatar images for my next 24 Bilibili accounts to Downloads, verify them, and then unfollow those exact accounts."

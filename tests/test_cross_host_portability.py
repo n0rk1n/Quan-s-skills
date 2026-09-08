@@ -9,7 +9,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "skills"
 
 SKILL_CATEGORIES = {
-    "adding-bilibili-covers-to-devonthink": "bilibili",
     "archiving-bilibili-favorites": "bilibili",
     "archiving-bilibili-following": "bilibili",
     "archiving-douyin-favorites": "douyin",
@@ -174,11 +173,28 @@ class BilibiliPortabilityTests(unittest.TestCase):
         skill = read("archiving-bilibili-favorites/SKILL.md")
 
         self.assertIn("authenticated browser automation", skill)
-        self.assertIn("DEVONthink MCP", skill)
+        self.assertIn("writable local filesystem", skill)
         self.assertIn("Stop before observing favorites", skill)
         self.assertIn("one bounded batch of up to 40", skill)
         self.assertIn("batch_size = min(40, available_stable_items)", skill)
         self.assertIn("If `batch_size` is 1–39, continue", skill)
+
+    def test_both_skills_require_local_images_before_cleanup(self) -> None:
+        for name, image in (("archiving-bilibili-favorites", "cover"),
+                            ("archiving-bilibili-following", "avatar")):
+            skill = read(f"{name}/SKILL.md")
+            workflow = read(f"{name}/references/workflow.md")
+            self.assertIn("~/Downloads/", skill)
+            self.assertNotIn("DEVONthink", skill + workflow)
+            for requirement in (f"{image}.<ext>", "file --mime-type", "image/jpeg",
+                                "image/png", "image/webp", "image/gif",
+                                "curl --fail --location", "i1.hdslb.com",
+                                "archive.json", "record.md", "图片失败", "原子"):
+                self.assertIn(requirement, workflow)
+
+    def test_standalone_cover_skill_is_removed(self) -> None:
+        self.assertFalse((SKILLS_ROOT / "bilibili" /
+                          "adding-bilibili-covers-to-devonthink").exists())
 
     def test_openai_prompt_does_not_define_core_invocation_syntax(self) -> None:
         metadata = read("archiving-bilibili-favorites/agents/openai.yaml")
@@ -208,7 +224,7 @@ class BilibiliPortabilityTests(unittest.TestCase):
         workflow = read("archiving-bilibili-favorites/references/workflow.md")
 
         self.assertIn("summary creation or verification fails", workflow)
-        self.assertIn("preserve verified bookmarks and cleanup state", workflow)
+        self.assertIn("preserve verified files and cleanup state", workflow)
         self.assertIn("do not claim full completion", workflow)
 
 
@@ -227,15 +243,15 @@ class BilibiliFollowingContractTests(unittest.TestCase):
         self.assertIn("fewer than 24", skill)
         self.assertIn("do not continue to another page", skill)
 
-    def test_archive_gate_requires_fresh_group_and_one_to_one_bookmarks(self) -> None:
+    def test_archive_gate_requires_fresh_directory_and_one_to_one_files(self) -> None:
         skill = read("archiving-bilibili-following/SKILL.md")
         workflow = read("archiving-bilibili-following/references/workflow.md")
 
         self.assertIn("YYYY-MM-DD Archived Bilibili Following Batch NN", skill)
-        self.assertIn("create fresh inbox group", skill.lower())
+        self.assertIn("create fresh downloads directory", skill.lower())
         self.assertIn("Bilibili Following", workflow)
         self.assertIn("状态：已归档；待取消关注", workflow)
-        self.assertIn("bookmark count", workflow)
+        self.assertIn("record count", workflow)
         self.assertIn("unique canonical URL count", workflow)
         self.assertIn("one-to-one", workflow)
 
@@ -255,7 +271,7 @@ class BilibiliFollowingContractTests(unittest.TestCase):
         metadata = read("archiving-bilibili-following/agents/openai.yaml")
 
         self.assertIn("24 account names and canonical URLs", workflow)
-        self.assertIn("thumbnail", workflow)
+        self.assertIn("avatar", workflow)
         self.assertIn("partial completion", workflow)
         self.assertNotIn("$archiving-bilibili-following", metadata)
         self.assertIn("Use the archiving-bilibili-following skill", metadata)
@@ -364,7 +380,7 @@ class ReadmePortabilityTests(unittest.TestCase):
     def test_readme_explains_capabilities_and_optional_metadata(self) -> None:
         text = read("README.md")
 
-        self.assertIn("DEVONthink MCP", text)
+        self.assertIn("Writable local filesystem access to `~/Downloads`", text)
         self.assertIn("browser automation", text.lower())
         self.assertIn("optional OpenAI/Codex interface metadata", text)
 
@@ -392,14 +408,14 @@ class ScenarioCoverageTests(unittest.TestCase):
             "opencode-all-capabilities",
             "missing-browser-automation",
             "douyin-missing-downloads-access",
-            "missing-devonthink-mcp",
+            "bilibili-missing-downloads-access",
             "missing-conversation-closing",
             "insufficient-conversation-context",
             "conversation-without-devonthink-mcp",
             "conversation-missing-downloads-access",
             "conversation-existing-archive-or-write-failure",
             "bilibili-partial-retry",
-            "semantic-mcp-tool-names",
+            "bilibili-semantic-file-tool-names",
             "semantic-local-file-capabilities",
             "douyin-detail-write-failure",
             "codex-handoff-generation",
@@ -440,7 +456,7 @@ class ScenarioCoverageTests(unittest.TestCase):
         for name in (
             "missing-browser-automation",
             "douyin-missing-downloads-access",
-            "missing-devonthink-mcp",
+            "bilibili-missing-downloads-access",
             "douyin-detail-write-failure",
         ):
             with self.subTest(scenario=name):
