@@ -81,38 +81,37 @@ asks for handoff content, return a complete candidate snapshot using every templ
 Fill unavailable facts with concrete reasons, label it as unvalidated and unpublished,
 and do not invent a path or claim that `LATEST.md` changed.
 
-1. Generate a local-time `YYYY-MM-DD-HHmm` value and a lowercase safe topic
-   slug. Run:
+1. Write the complete AI-reviewed Markdown in a safe temporary directory.
+   Any candidate filename is accepted. Review completeness, evidence labels,
+   source-reference provenance, sensitive information, and root metadata before
+   publication. The script checks structure; it cannot establish factual truth.
+2. Use the shared CLI (Python 3.9+, standard library only):
 
    ```sh
-   python3 "$SKILL_DIR/scripts/validate_handoff.py" next-path \
-     "$HANDOFF_DIR" --timestamp "<timestamp>" --topic "<topic-slug>"
+   python3 -B "$SKILL_DIR/scripts/handoff.py" publish \
+     --root "$PROJECT_ROOT" --candidate "$CANDIDATE_MD" --topic "$TOPIC_SLUG"
    ```
 
-2. Write the fully rendered candidate snapshot in a safe temporary directory.
-   Semantically review its completeness, evidence labels, source-reference provenance, and
-   sensitive information.
-3. Run `validate the candidate snapshot` with:
+   Set `PROJECT_ROOT` to the explicitly resolved project or authorized task
+   worktree root, `CANDIDATE_MD` to the reviewed candidate path, and `TOPIC_SLUG`
+   to a lowercase hyphenated topic. The script requires an existing root and
+   does not create a Git worktree, commit, or grant permission to publish.
+   Obey current worktree rules before using this write command.
+   Run `publish --help` for the optional local-time `--timestamp` override.
+3. The script will validate the candidate snapshot, then atomically
+   publish the timestamped snapshot without overwriting an existing file,
+   validate the candidate `LATEST.md`, and atomically replace `LATEST.md`.
+   It first validates an existing index and its target; malformed existing
+   content blocks publication. A publication lock prevents simultaneous CLI
+   publishers from racing. A stale lock requires checking that no publisher is
+   active before manual removal; do not automatically break it.
+4. Read the JSON result. Success reports `validated`, `latest_updated`, absolute
+   paths, and `resume_prompt`. On failure, JSON on stderr reports the error and
+   any already-published `snapshot`; the previous index is retained when index
+   publication fails. Do not claim full success from a snapshot path alone.
+   Invalid candidates and temporary files are not published as snapshots.
 
-   ```sh
-   python3 "$SKILL_DIR/scripts/validate_handoff.py" snapshot "<candidate>"
-   ```
-
-   Fix every error and revalidate. Confirm the selected final path still does
-   not exist.
-4. Atomically `publish the timestamped snapshot` to the selected path without
-   overwriting any existing snapshot.
-5. In the handoff directory, render a temporary candidate `LATEST.md` whose
-   link is the new snapshot's filename. Then validate the candidate `LATEST.md`
-   with:
-
-   ```sh
-   python3 "$SKILL_DIR/scripts/validate_handoff.py" latest "<candidate-latest>"
-   ```
-
-6. Only after both validations succeed, atomically `replace `LATEST.md`` with
-   the validated candidate. If any step fails, keep the previous valid index
-   unchanged and report the exact published or unpublished state.
+The existing standalone validator remains available for manual diagnostics.
 
 ## Completion Report
 
