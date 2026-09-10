@@ -105,8 +105,8 @@ class ConversationPortabilityTests(unittest.TestCase):
         self.assertIn("explicitly names or invokes this skill", text)
         self.assertIn("Stop before generating files", text)
         self.assertIn("~/Downloads/YYYY-MM-DD Archived AI Conversations/", text)
-        self.assertIn("Keep both Markdown files permanently", text)
-        self.assertIn("Read both final files back as UTF-8", text)
+        self.assertIn("Keep all Markdown files permanently", text)
+        self.assertIn("Read all final files back as UTF-8", text)
         self.assertIn("Never overwrite existing archives", text)
         self.assertNotIn("mode: import", text)
 

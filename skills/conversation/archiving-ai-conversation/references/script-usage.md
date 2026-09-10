@@ -18,6 +18,7 @@ Without `--input`, `save` reads JSON from stdin. Default destination: the curren
     {"role": "user", "content": "请修复原文链接。"},
     {"role": "assistant", "content": "已修复链接，并核对目标文件。"}
   ],
+  "sops": [],
   "retrospective": {
     "背景": "原文链接无法打开。",
     "处理过程": "修正链接编码并回读核对。",
@@ -34,12 +35,35 @@ Use actual conversation content, never copy this example as an archive. Include 
 
 The script checks shape and storage. The model must still select the correct source, preserve useful wording, judge completeness, omit irrelevant large pastes, and verify the retrospective's accuracy.
 
+## SOP input
+
+Every new archive must explicitly supply `sops` after assessing the conversation. Use `[]` only when no reusable procedure or format exists. For older callers, an omitted field is accepted as an empty list; the script cannot judge whether the model overlooked an SOP.
+
+Each list item has a `title` (the SOP name, with the same restrictions as the archive title) and `sections` containing exactly these five nonempty text fields. Example item for a conversation that actually established this procedure:
+
+```json
+{
+  "title": "归档文件回读校验",
+  "sections": {
+    "目的与适用场景": "归档完成后，核对保存内容是否完整。",
+    "前置条件与输入": "已生成的归档内容和对应的已保存文件。",
+    "标准步骤或格式": "1. 按 UTF-8 回读每个文件。\n2. 将回读内容与生成内容逐一比较。\n3. 检查文档链接是否指向实际保存文件。",
+    "输出与验收标准": "所有内容一致，所有链接指向正确文件后，才记录校验通过。",
+    "异常处理与适用边界": "任一检查失败时保留已保存文件和源对话，报告失败路径；本检查不证明内容的事实准确性。"
+  }
+}
+```
+
+The writer generates the SOP title, five section headings, and encoded source link. Standard formats use a copyable template in `标准步骤或格式`; procedures use ordered steps. Label unverified proposals `待验证` and unknown details `待补充`. Each SOP has its own file; the retrospective's generated `SOP 文档` section links to each. An empty list generates `未发现可提炼的标准流程或标准格式。`.
+
 ## Output and failure handling
 
-Success exits 0 and prints a JSON object with `verified: true` and absolute `directory`, `transcript`, and `retrospective` paths. Both Markdown files remain permanently. The script never invokes a host archive/close operation.
+Success exits 0 and prints a JSON object with `verified: true` and absolute `directory`, `transcript`, and `retrospective` paths. All 2 + N Markdown files remain permanently. The `sops` output is an array of absolute paths, empty when none were supplied. The script never invokes a host archive/close operation.
 
 Invalid data is rejected before creating the daily archive directory. Failures exit nonzero and print `verified: false` and `error`; failures during writing or verification also include the planned paths. A path in an error response does not prove that its file exists. Preserve any partial files, inspect the paths, report the error, and leave the conversation active. Retry only after resolving the cause; retries create a new numbered pair rather than overwrite previous output.
 
 If either final filename already exists, both new filenames use the same numeric suffix. A shared `.archive.lock` serializes this script's writers; exclusive file creation also prevents overwriting files created by other writers. Keep the lock file. Existing and partial archives are never automatically removed.
 
 Preflight returns `writable: true` and the resolved Downloads path on success. It does not guarantee that later writes will succeed (for example, disk space or permissions may change).
+
+SOP names are allocated independently under the same lock, including duplicate titles in one input. Existing files and dangling symlinks are treated as collisions. Every SOP participates in exclusive writing and exact byte read-back; any failure returns `verified: false` with all planned SOP paths and preserves partial output. Never close the conversation on partial success.

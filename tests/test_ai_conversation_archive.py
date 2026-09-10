@@ -76,6 +76,74 @@ class ArchiveTests(unittest.TestCase):
                 self.save(data)
         self.assertEqual(list(self.downloads.iterdir()), [])
 
+    def sop_payload(self):
+        data = payload()
+        data['sops'] = [{'title': name, 'sections': {
+            '目的与适用场景': '核对归档。', '前置条件与输入': '已有文件。',
+            '标准步骤或格式': '1. 读取文件。\n2. 核对内容。',
+            '输出与验收标准': '内容一致。', '异常处理与适用边界': '失败则保留现场。'
+        }} for name in ['文件校验', '报告格式']]
+        return data
+
+    def test_each_sop_has_own_file_and_bidirectional_links(self):
+        result = self.save(self.sop_payload())
+        self.assertEqual(len(result.get('sops', [])), 2)
+        summary = Path(result['retrospective']).read_text()
+        for name, filename in zip(['文件校验', '报告格式'], result['sops']):
+            path = Path(filename)
+            self.assertEqual(path.name, f'2026-09-07 {name}（SOP）.md')
+            self.assertIn(quote(path.name, safe=''), summary)
+            self.assertIn(quote(Path(result['transcript']).name, safe=''), path.read_text())
+            self.assertIn('## 输出与验收标准', path.read_text())
+        self.assertEqual(len(list(self.downloads.rglob('*.md'))), 4)
+
+    def test_no_sops_reports_empty_list_and_reason(self):
+        result = self.save()
+        self.assertEqual(result.get('sops'), [])
+        self.assertIn('未发现可提炼的标准流程或标准格式', Path(result['retrospective']).read_text())
+
+    def test_duplicate_sop_titles_and_repeated_runs_do_not_overwrite(self):
+        data = self.sop_payload()
+        data['sops'][1]['title'] = data['sops'][0]['title']
+        first = self.save(data)
+        before = {p: Path(p).read_bytes() for p in first.get('sops', [])}
+        second = self.save(data)
+        paths = first.get('sops', []) + second.get('sops', [])
+        self.assertEqual(len(set(paths)), 4)
+        for path, content in before.items():
+            self.assertEqual(Path(path).read_bytes(), content)
+
+    def test_concurrent_sop_runs_keep_complete_distinct_sets(self):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda _: self.save(self.sop_payload()), range(8)))
+        paths = [path for result in results for path in result['sops']]
+        self.assertEqual(len(set(paths)), 16)
+        self.assertTrue(all(Path(path).is_file() for path in paths))
+        self.assertEqual(len(list(self.downloads.rglob('*.md'))), 32)
+
+    def test_invalid_sops_rejected_before_writing(self):
+        for value in [None, {}, [1], [{'title': '../bad', 'sections': {}}],
+                      [{'title': '步骤', 'sections': {}}]]:
+            data = payload(); data['sops'] = value
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.save(data)
+        self.assertEqual(list(self.downloads.iterdir()), [])
+
+    def test_sop_write_or_readback_failure_reports_all_paths(self):
+        original = self.module.write_exclusive
+        for corrupt in [False, True]:
+            def fail_sop(path, text):
+                if '（SOP）' in path.name:
+                    if not corrupt:
+                        raise OSError('SOP disk full')
+                    text += 'corruption'
+                original(path, text)
+            with patch.object(self.module, 'write_exclusive', side_effect=fail_sop):
+                with self.assertRaises(self.module.ArchiveError) as caught:
+                    self.save(self.sop_payload())
+            self.assertEqual(len(caught.exception.paths['sops']), 2)
+            self.assertTrue(Path(caught.exception.paths['transcript']).is_file())
+
     def test_missing_downloads_is_not_silently_created(self):
         with self.assertRaises(OSError):
             self.module.archive(payload(), self.downloads / 'missing', '2026-09-07')

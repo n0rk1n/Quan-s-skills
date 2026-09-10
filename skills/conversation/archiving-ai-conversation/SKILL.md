@@ -7,7 +7,7 @@ description: Use when the user explicitly names or invokes archiving-ai-conversa
 
 ## Overview
 
-Save a concise transcript and Chinese retrospective as two Markdown files in the user's Downloads directory, verify both files, then close the source conversation as far as the host allows. Keep both files as the permanent archive.
+Save a concise transcript and Chinese retrospective as two base Markdown files plus one separate Markdown file per reusable SOP in the user's Downloads directory, verify all files, then close the source conversation as far as the host allows. Keep all files as the permanent archive.
 
 This skill does not require or write to DEVONthink.
 
@@ -44,7 +44,7 @@ For the current conversation, build the lightweight transcript from the readable
    ```
 
    It creates, reads, and removes a temporary probe in the existing Downloads root; `save` repeats this check before writing to the daily subdirectory. Stop on a nonzero exit. The default archive destination is `~/Downloads/YYYY-MM-DD Archived AI Conversations/`, using the local date. Use `--downloads-dir` only for the actual Downloads location on another host, an explicitly requested destination, or a disposable test fixture.
-3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought. Prepare a UTF-8 JSON object following [the input contract](references/script-usage.md). The model supplies the faithful `messages`, short `title`, and seven retrospective sections. The script generates headings and the `## 原文记录` link.
+3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought. Prepare a UTF-8 JSON object following [the input contract](references/script-usage.md). The model supplies the faithful `messages`, short `title`, seven retrospective sections, and an explicit `sops` list after the SOP assessment below. The script generates headings and the `## 原文记录` link.
 4. Use readable current context first. Optional source adapters may be used only when the host context is insufficient and an export source is explicitly available. Export into a safe temporary staging directory, then select the exact source and turn its transcript into the JSON `messages` array:
 
    ```bash
@@ -59,10 +59,28 @@ For the current conversation, build the lightweight transcript from the readable
    python3 "$SKILL_DIR/scripts/archive_conversation.py" save --input <archive-input.json>
    ```
 
-   The writer creates the daily directory, selects a free pair of filenames under a shared lock, normalizes embedded headings while preserving fenced code, generates the encoded transcript link, writes both files exclusively, and flushes them to disk. Read both final files back as UTF-8: the writer does this automatically and compares their exact bytes with the generated content. It verifies directory placement and the transcript link, then returns JSON containing `verified`, `directory`, `transcript`, and `retrospective` absolute paths. A hidden `.archive.lock` is retained for concurrent runs; do not delete it.
-6. Require exit code 0 and `verified: true`. Then inspect the returned files for source fidelity, useful content, and omissions. Script success verifies storage and structure, not factual accuracy or completeness. It never closes a conversation.
-7. Keep both Markdown files permanently; do not delete them as temporary files. After successful verification, remove only this run's temporary JSON or adapter staging files. Never remove source exports. On any save, read-back, link, or cleanup failure, preserve the saved Markdown and the active source conversation; report the incomplete step and returned paths. A failed save returns nonzero with `verified: false`, an error, and the planned paths when available; inspect which files exist instead of assuming a full pair.
-8. Follow the closing table only after storage and content checks pass. Report the absolute daily directory, clickable links to both files, verification result, host capability, and closing result.
+   The writer creates the daily directory, selects free transcript, retrospective, and individual SOP filenames under a shared lock, normalizes embedded headings while preserving fenced code, generates the encoded transcript link, writes all files exclusively, and flushes them to disk. Read all final files back as UTF-8: the writer does this automatically and compares their exact bytes with the generated content. It verifies directory placement and generated links, then returns JSON containing `verified`, `directory`, `transcript`, `retrospective`, and the `sops` array of absolute paths. A hidden `.archive.lock` is retained for concurrent runs; do not delete it.
+6. Require exit code 0 and `verified: true`. Then inspect every returned file for source fidelity, useful content, and omissions. Confirm that `sops` contains exactly one path per identified SOP; all 2 + N files must pass before closing. Script success verifies storage and structure, not factual accuracy or completeness. It never closes a conversation.
+7. Keep all Markdown files permanently; do not delete them as temporary files. After successful verification, remove only this run's temporary JSON or adapter staging files. Never remove source exports. On any save, read-back, link, or cleanup failure, preserve the saved Markdown and the active source conversation; report the incomplete step and returned paths. A failed save returns nonzero with `verified: false`, an error, and the planned paths when available; inspect which files exist instead of assuming a complete set.
+8. Follow the closing table only after storage and content checks pass. Report the absolute daily directory, clickable links to all files, verification result, host capability, and closing result.
+
+## SOP Assessment (Required on Every Archive)
+
+Review the final conversation for reusable standard procedures **and standard formats**. One occurrence is sufficient: if at least one reusable item exists, create one independent Markdown document for **each** SOP. Use `sops: []` only after finding none; the writer records that finding in the retrospective.
+
+| Conversation content | Required output |
+| --- | --- |
+| One reusable procedure or format | One SOP file, plus transcript and retrospective |
+| Multiple independently reusable items | One file per item; retrospective links to all |
+| No reusable procedure or format | Transcript and retrospective with an explicit no-SOP finding |
+
+Keep consecutive steps of one procedure together. Combine duplicate descriptions of the same method. Separate independently usable procedures or formats. A one-off answer without a reusable structure is not an SOP.
+
+Each SOP uses the five required sections in [the input contract](references/script-usage.md): purpose/scope, prerequisites/inputs, steps or a copyable format, outputs/acceptance, and exceptions/boundaries. Write it in Chinese so it can be used without reading the conversation. Base it on the final agreed approach; label unverified proposals `待验证` and missing information `待补充`. Preserve known prerequisites and limitations; do not invent operational details or present abandoned approaches as standards.
+
+For example, a conversation establishing a file-checking procedure and an independent report template produces two SOP files. The checking procedure's read, compare, and failure-handling steps remain together in one file.
+
+Common mistakes: skipping an item because it appeared only once; combining unrelated SOPs into one document; splitting every step into a separate SOP; closing after verifying only the two base files. Check the identified items against the returned `sops` paths before closing.
 
 ## Conversation Closing
 
@@ -70,12 +88,13 @@ For the current conversation, build the lightweight transcript from the readable
 | --- | --- |
 | Available, such as a `set_thread_archived` or equivalent close/archive operation | Use the host's conversation close or archive capability for the exact source. Omit the source ID only for the calling conversation; otherwise pass its exact source/host IDs. Never close a different conversation or executor. |
 | Unavailable | After successful file verification, tell the user to archive or delete the source conversation manually. Do not invent a fallback. |
-| Tool call fails | Report that the Markdown files were saved but conversation archival failed, request manual archive/deletion, and do not claim full automatic completion. Preserve both files. |
+| Tool call fails | Report that the Markdown files were saved but conversation archival failed, request manual archive/deletion, and do not claim full automatic completion. Preserve all files. |
 
 ## File and Transcript Rules
 
 - Retrospective: `YYYY-MM-DD <对话解决的问题>（AI 对话归档）.md`; transcript: `YYYY-MM-DD <对话解决的问题>（AI 对话原文）.md`.
-- Use the same short phrase; no `HH:mm`, slashes, or newlines. The script rejects titles over 150 UTF-8 bytes, colons, or control characters.
+- SOP: `YYYY-MM-DD <SOP 名称>（SOP）.md`, one file per SOP in the same directory. Each links to the transcript; the retrospective lists every SOP. SOP names use the same title restrictions and get independent numeric suffixes on collision, including duplicate names within one run.
+- For the transcript and retrospective, use the same short phrase; no `HH:mm`, slashes, or newlines. The script rejects titles over 150 UTF-8 bytes, colons, or control characters.
 - Never overwrite existing archives. If either filename exists, append the same available numeric suffix to the short phrase in both filenames before writing; update the transcript link accordingly. Use exclusive creation to avoid overwrites during concurrent runs.
 - Only `## 用户` and `## AI` may be level-two transcript headings. Normalize other headings outside code to `###`.
 - Omit tool calls, raw arguments/results, and long pasted material unless forensic detail is requested.
