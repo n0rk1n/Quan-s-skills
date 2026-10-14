@@ -4,7 +4,7 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 
 ## Skills
 
-Skills are grouped by subject under `skills/`; every leaf directory is a complete, independently installable skill.
+Skills are grouped by subject under `skills/`; every leaf directory is a complete skill. The three Bilibili/Douyin skills are enabled only in this project through relative symlinks under `.agents/skills/`. Conversation skills can be installed separately for use across projects.
 
 | Category | Repository path | Skill |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Skills are grouped by subject under `skills/`; every leaf directory is a complet
 
 They stop safely before observing the source list if either capability is unavailable. Each dated batch contains `archive.json`, one ID directory per item with `record.md` and its downloaded image, and `summary.md`. All records and images must pass read-back verification before any unfavorite/unfollow action. Image failures stop cleanup for the whole batch. Both independently installable skills bundle the same CLI for preflight, archive, verify, resume, and status/summary updates. Browser automation supplies observed JSON and cleanup evidence; the script never performs account actions. Read each skill’s `references/script-usage.md` for schemas and commands.
 
-Bilibili archives use `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch NN/` or `~/Downloads/YYYY-MM-DD Archived Bilibili Following Batch NN/`. Image saving is built into both archive skills; the former standalone cover skill has been removed. Existing archives are not migrated. Installed copies are separate from this repository: when updating an installation, replace both complete archive skill directories and remove the obsolete cover skill directory from that host’s skill discovery path.
+Bilibili archives use `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch NN/` or `~/Downloads/YYYY-MM-DD Archived Bilibili Following Batch NN/`. Image saving is built into both archive skills; the former standalone cover skill has been removed. Existing archives are not migrated. The Bilibili skills are loaded from this repository through `.agents/skills/`; changes to their source directories take effect through those links. Do not copy these skills into a global skill discovery directory.
 
 **Douyin favorites** (`archiving-douyin-favorites`) requires:
 
@@ -60,7 +60,25 @@ Clone this repository:
 git clone https://github.com/n0rk1n/Quan-s-skills.git
 ```
 
-Copy a complete skill directory into Codex's local skills directory. The destination stays flat: `SKILL.md` must be at `~/.codex/skills/<name>/SKILL.md`.
+### Project-only Bilibili and Douyin skills
+
+This checkout includes these project-scoped entries:
+
+| Project entry | Source directory |
+| --- | --- |
+| `.agents/skills/archiving-douyin-favorites` | `skills/douyin/archiving-douyin-favorites` |
+| `.agents/skills/archiving-bilibili-favorites` | `skills/bilibili/archiving-bilibili-favorites` |
+| `.agents/skills/archiving-bilibili-following` | `skills/bilibili/archiving-bilibili-following` |
+
+Each entry is a relative symlink to the complete skill directory, including its scripts and references. Open Codex in this repository or one of its subdirectories to use them. No global installation is needed. Do not install these three skills in `~/.agents/skills`, `~/.codex/skills`, or other hosts' global skill directories. If an older global installation exists, compare and preserve any local changes before removing that installation.
+
+Codex supports repository-scoped skills and symlinked skill folders; see the [official skills documentation](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills). If the entries do not appear after updating the checkout, restart Codex.
+
+### Global conversation skills
+
+The following global installation commands apply only to the conversation skills.
+
+Copy a complete conversation skill directory into Codex's local skills directory. The destination stays flat: `SKILL.md` must be at `~/.codex/skills/<name>/SKILL.md`.
 
 ```sh
 mkdir -p ~/.codex/skills
@@ -79,7 +97,7 @@ cp -R Quan-s-skills/skills/<category>/<name> ~/.codex/skills/
 
 ## Install for OpenCode
 
-Clone this repository as shown above, then copy a skill into OpenCode's skill discovery path:
+For conversation skills only, clone this repository as shown above, then copy a skill into OpenCode's skill discovery path. The Bilibili/Douyin skills remain project-only and must not be installed using these global commands:
 
 ```sh
 mkdir -p ~/.config/opencode/skills
