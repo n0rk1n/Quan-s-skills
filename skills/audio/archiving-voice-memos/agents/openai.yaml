@@ -1,0 +1,4 @@
+interface:
+  display_name: "归档录音并转录内容"
+  short_description: "归档语音备忘录中的原始录音、原始转录和整理后全文，优先本地离线识别。"
+  default_prompt: "使用 $archiving-voice-memos 将指定的语音备忘录归档到下载目录，保留原始音频、原始转录和整理后全文，并验证文件完整性。"

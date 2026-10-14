@@ -4,10 +4,11 @@ Cross-host Agent Skills for Codex, OpenCode, and compatible hosts.
 
 ## Skills
 
-Skills are grouped by subject under `skills/`; every leaf directory is a complete skill. The three Bilibili/Douyin skills are enabled only in this project through relative symlinks under `.agents/skills/`. Conversation skills can be installed separately for use across projects.
+Skills are grouped by subject under `skills/`; every leaf directory is a complete skill. The Bilibili/Douyin and Voice Memos skills are enabled only in this project through relative symlinks under `.agents/skills/`. Conversation skills can be installed separately for use across projects.
 
 | Category | Repository path | Skill |
 | --- | --- | --- |
+| Audio | `skills/audio/archiving-voice-memos` | `archiving-voice-memos`（归档录音并转录内容）: Archive macOS Voice Memos audio, original transcription, and a complete edited transcript to Downloads, using embedded dictation or local offline recognition. |
 | Conversation | `skills/conversation/archiving-ai-conversation` | `archiving-ai-conversation`: Save an AI conversation to Downloads as a concise Chinese Markdown retrospective plus a separate original transcript Markdown file. |
 | Bilibili | `skills/bilibili/archiving-bilibili-favorites` | `archiving-bilibili-favorites`: Save video records and cover images to Downloads, then safely unfavorite one batch of up to 40. |
 | Bilibili | `skills/bilibili/archiving-bilibili-following` | `archiving-bilibili-following`: Save account records and avatar images to Downloads, then safely unfollow one current-page batch of 24. |
@@ -32,6 +33,14 @@ Bilibili archives use `~/Downloads/YYYY-MM-DD Archived Bilibili Favorites Batch 
 - Python 3 for the bundled `scripts/archive_douyin_favorites.py` writer and read-back verifier.
 
 It stops safely before observing favorites if either capability is unavailable.
+
+**Voice Memos archiving and transcription** (`archiving-voice-memos`) requires:
+
+- macOS Voice Memos and computer-use access to confirm the selected recording; readable local recording metadata or an audio file exported through the app.
+- Python 3.11+, `ffmpeg`, and `ffprobe`; local `whisper-cli` and a compatible model when embedded Apple dictation is unavailable or re-recognition is requested.
+- Writable access to `~/Downloads` and a separate working directory for state metadata. Each archive retains original audio, original transcription TXT, and a complete edited transcription TXT.
+
+The skill prefers local/offline transcription and does not automatically upload audio. Source deletion is optional, requires the user's request and verified exports, and is performed through the app rather than the helper script. The bundled tests can be run with `python3 -B -m unittest discover -s skills/audio/archiving-voice-memos/tests -v`.
 
 **Conversation archiving** (`archiving-ai-conversation`) requires:
 - Readable current conversation context (or an optional supported export source).
@@ -60,17 +69,18 @@ Clone this repository:
 git clone https://github.com/n0rk1n/Quan-s-skills.git
 ```
 
-### Project-only Bilibili and Douyin skills
+### Project-only Bilibili, Douyin, and Voice Memos skills
 
 This checkout includes these project-scoped entries:
 
 | Project entry | Source directory |
 | --- | --- |
+| `.agents/skills/archiving-voice-memos` | `skills/audio/archiving-voice-memos` |
 | `.agents/skills/archiving-douyin-favorites` | `skills/douyin/archiving-douyin-favorites` |
 | `.agents/skills/archiving-bilibili-favorites` | `skills/bilibili/archiving-bilibili-favorites` |
 | `.agents/skills/archiving-bilibili-following` | `skills/bilibili/archiving-bilibili-following` |
 
-Each entry is a relative symlink to the complete skill directory, including its scripts and references. Open Codex in this repository or one of its subdirectories to use them. No global installation is needed. Do not install these three skills in `~/.agents/skills`, `~/.codex/skills`, or other hosts' global skill directories. If an older global installation exists, compare and preserve any local changes before removing that installation.
+Each entry is a relative symlink to the complete skill directory, including its scripts and references. Open Codex in this repository or one of its subdirectories to use them. No global installation is needed. Do not install these project-only skills in `~/.agents/skills`, `~/.codex/skills`, or other hosts' global skill directories. If an older global installation exists, compare and preserve any local changes before removing that installation.
 
 Codex supports repository-scoped skills and symlinked skill folders; see the [official skills documentation](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills). If the entries do not appear after updating the checkout, restart Codex.
 
@@ -97,7 +107,7 @@ cp -R Quan-s-skills/skills/<category>/<name> ~/.codex/skills/
 
 ## Install for OpenCode
 
-For conversation skills only, clone this repository as shown above, then copy a skill into OpenCode's skill discovery path. The Bilibili/Douyin skills remain project-only and must not be installed using these global commands:
+For conversation skills only, clone this repository as shown above, then copy a skill into OpenCode's skill discovery path. The Bilibili/Douyin and Voice Memos skills remain project-only and must not be installed using these global commands:
 
 ```sh
 mkdir -p ~/.config/opencode/skills

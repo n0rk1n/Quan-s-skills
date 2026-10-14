@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "skills"
 
 SKILL_CATEGORIES = {
+    "archiving-voice-memos": "audio",
     "archiving-bilibili-favorites": "bilibili",
     "archiving-bilibili-following": "bilibili",
     "archiving-douyin-favorites": "douyin",
