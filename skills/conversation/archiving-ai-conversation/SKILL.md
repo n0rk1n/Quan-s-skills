@@ -7,7 +7,7 @@ description: Use when the user explicitly names or invokes archiving-ai-conversa
 
 ## Overview
 
-Save a concise transcript and Chinese retrospective as two base Markdown files plus one separate Markdown file per reusable SOP in the user's Downloads directory, verify all files, then close the source conversation as far as the host allows. Keep all files as the permanent archive.
+Save a concise transcript and Chinese retrospective, one Markdown file per eligible SOP, and copies of conversation-produced files not tracked by Git in the user's Downloads directory. Verify the complete set before closing the source conversation. Keep all files as the permanent archive. Exclude procedures and formats about this archiving skill itself from SOP output.
 
 This skill does not require or write to DEVONthink.
 
@@ -19,7 +19,7 @@ Run this Skill only when the user explicitly names or invokes this skill through
 
 - Readable current conversation context, or an explicitly selected supported export source.
 - Local filesystem access to create and read back files in the user's Downloads directory (`~/Downloads` on macOS; resolve `~` to the actual user's home).
-- Python 3.10+ on macOS/Linux for the bundled writer (standard library only).
+- Python 3.10+ on macOS/Linux for the bundled writer (standard library only); Git CLI when checking produced files.
 - Optional: a conversation close or archive capability that can target the exact source conversation.
 
 Map the current host's tools to these semantic capabilities before reading an external export source or creating output. If neither host context nor a selected adapter can produce a faithful transcript, or writable Downloads access is unavailable, report the missing capability. Stop before generating files. Do not silently use a repository, Desktop, temporary directory, or remote service as the archive destination.
@@ -44,7 +44,7 @@ For the current conversation, build the lightweight transcript from the readable
    ```
 
    It creates, reads, and removes a temporary probe in the existing Downloads root; `save` repeats this check before writing to the daily subdirectory. Stop on a nonzero exit. The default archive destination is `~/Downloads/YYYY-MM-DD Archived AI Conversations/`, using the local date. Use `--downloads-dir` only for the actual Downloads location on another host, an explicitly requested destination, or a disposable test fixture.
-3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought. Prepare a UTF-8 JSON object following [the input contract](references/script-usage.md). The model supplies the faithful `messages`, short `title`, seven retrospective sections, and an explicit `sops` list after the SOP assessment below. The script generates headings and the `## 原文记录` link.
+3. Gather useful metrics, decisions, repeated problems, anchors, and outcomes. Mark estimates; omit private chain-of-thought. Prepare a UTF-8 JSON object following [the input contract](references/script-usage.md). The model supplies the faithful `messages`, short `title`, seven retrospective sections, an explicit `artifacts` list of produced file paths, and an explicit `sops` list with each candidate's `scope` after the assessments below. The script generates headings and the `## 原文记录` link.
 4. Use readable current context first. Optional source adapters may be used only when the host context is insufficient and an export source is explicitly available. Export into a safe temporary staging directory, then select the exact source and turn its transcript into the JSON `messages` array:
 
    ```bash
@@ -59,19 +59,31 @@ For the current conversation, build the lightweight transcript from the readable
    python3 "$SKILL_DIR/scripts/archive_conversation.py" save --input <archive-input.json>
    ```
 
-   The writer creates the daily directory, selects free transcript, retrospective, and individual SOP filenames under a shared lock, normalizes embedded headings while preserving fenced code, generates the encoded transcript link, writes all files exclusively, and flushes them to disk. Read all final files back as UTF-8: the writer does this automatically and compares their exact bytes with the generated content. It verifies directory placement and generated links, then returns JSON containing `verified`, `directory`, `transcript`, `retrospective`, and the `sops` array of absolute paths. A hidden `.archive.lock` is retained for concurrent runs; do not delete it.
-6. Require exit code 0 and `verified: true`. Then inspect every returned file for source fidelity, useful content, and omissions. Confirm that `sops` contains exactly one path per identified SOP; all 2 + N files must pass before closing. Script success verifies storage and structure, not factual accuracy or completeness. It never closes a conversation.
-7. Keep all Markdown files permanently; do not delete them as temporary files. After successful verification, remove only this run's temporary JSON or adapter staging files. Never remove source exports. On any save, read-back, link, or cleanup failure, preserve the saved Markdown and the active source conversation; report the incomplete step and returned paths. A failed save returns nonzero with `verified: false`, an error, and the planned paths when available; inspect which files exist instead of assuming a complete set.
+   The writer checks each supplied artifact in its own Git repository, filters out Git-tracked files and archive-skill SOPs, creates the daily directory, selects free transcript, retrospective, individual SOP, artifact, and manifest filenames under a shared lock, normalizes embedded headings while preserving fenced code, generates the encoded transcript link, writes the Markdown files first, copies eligible artifacts byte-for-byte, writes their JSON manifest, and flushes all files to disk using exclusive creation. Read all final files back as UTF-8 for Markdown/JSON: the writer does this automatically and compares their exact bytes with the generated content. Binary artifacts use streaming SHA-256 and size checks against both source and destination; source changes fail verification. It verifies directory placement and generated links, then returns JSON containing `verified`, `directory`, `transcript`, `retrospective`, the `sops` array of absolute paths, `skipped_sops`, `artifacts`, `skipped_artifacts`, and `artifact_manifest`. See the input contract for their shapes. A hidden `.archive.lock` is retained for concurrent runs; do not delete it.
+6. Require exit code 0 and `verified: true`. Then inspect every returned file for source fidelity, useful content, and omissions. Confirm that `sops` contains exactly one path per eligible SOP and that copied plus skipped artifacts account for all unique supplied files. All 2 + N Markdown files, copied artifacts, and the manifest must pass before closing. Script success verifies storage and structure, not factual accuracy or completeness. It never closes a conversation.
+7. Keep all Markdown files permanently, together with copied artifacts and their manifest; do not delete them as temporary files. After successful verification, remove only this run's temporary JSON or adapter staging files. Never remove source exports. On any save, read-back, link, or cleanup failure, preserve every saved file, source artifact, and the active source conversation; report the incomplete step and returned paths. A failed save returns nonzero with `verified: false`, an error, and the planned paths when available; inspect which files exist instead of assuming a complete set.
 8. Follow the closing table only after storage and content checks pass. Report the absolute daily directory, clickable links to all files, verification result, host capability, and closing result.
+
+## Produced Files Assessment (Required on Every Archive)
+
+List the actual files produced or updated as deliverables in the selected conversation in `artifacts`, using absolute paths. Include files outside repositories and ignored/untracked files inside repositories; submit Git-tracked candidates too so the script records why they were skipped. Use `artifacts: []` only when there are no produced files. Do not sweep unrelated directory contents, source inputs, caches, or this archive run's temporary JSON into the list. For a deliverable directory, enumerate its relevant regular files. Supply the actual file path rather than a symlink.
+
+The script decides Git tracking with the file's own repository index, including linked worktrees: tracked files are recorded but not copied; ignored files, untracked files, and files outside Git are copied into the returned daily `directory`. Being inside a repository or listed in `.gitignore` does not mean a file is tracked. No `git add`, commit, move, or source deletion is performed.
+
+Copies retain their original bytes and extension; name collisions receive numeric suffixes. The retrospective links to each copy and its manifest, which records source, destination, size, SHA-256, and Git-tracked skips. Missing/unreadable files, unavailable Git, uncertain Git checks, copy failures, or hash mismatches make the run incomplete. Recover a missing deliverable from an available original or rerun its established generation command and verify it before retrying; do not silently omit it or substitute a summary/link for its contents.
+
+**Script all deterministic operations.** Use the bundled writer for path validation, Git inspection, SOP scope filtering, collision handling, copying, manifest/link generation, and storage verification. Do not replace these with manual agent steps or one-off copy commands. The model's remaining work is source selection, produced-file identification, semantic SOP classification, and factual review. Script success cannot establish that the model supplied every relevant file or classified its subject correctly.
 
 ## SOP Assessment (Required on Every Archive)
 
-Review the final conversation for reusable standard procedures **and standard formats**. One occurrence is sufficient: if at least one reusable item exists, create one independent Markdown document for **each** SOP. Use `sops: []` only after finding none; the writer records that finding in the retrospective.
+Review the final conversation for reusable standard procedures **and standard formats**. Classify each candidate by subject before writing its sections: `scope: "archiving-ai-conversation"` for the use, configuration, implementation, repair, or maintenance of this archiving skill itself; `scope: "general"` for other subjects. Archive-skill candidates need only title and scope: the writer excludes them and records the exclusion, so do not draft their SOP sections. One occurrence is sufficient for an eligible general item: create one independent Markdown document for **each**. Use `sops: []` only after finding no candidates.
 
 | Conversation content | Required output |
 | --- | --- |
-| One reusable procedure or format | One SOP file, plus transcript and retrospective |
-| Multiple independently reusable items | One file per item; retrospective links to all |
+| One reusable procedure or format unrelated to this archiving skill | One SOP file, plus transcript and retrospective |
+| Multiple independently reusable eligible items | One file per item; retrospective links to all |
+| Only procedures/formats about this archiving skill | Transcript and retrospective with an explicit exclusion finding; no SOP file |
+| Archive-skill content plus an unrelated reusable item | Exclude only archive-skill candidates; create an SOP for the unrelated item |
 | No reusable procedure or format | Transcript and retrospective with an explicit no-SOP finding |
 
 Keep consecutive steps of one procedure together. Combine duplicate descriptions of the same method. Separate independently usable procedures or formats. A one-off answer without a reusable structure is not an SOP.
@@ -80,7 +92,7 @@ Each SOP uses the five required sections in [the input contract](references/scri
 
 For example, a conversation establishing a file-checking procedure and an independent report template produces two SOP files. The checking procedure's read, compare, and failure-handling steps remain together in one file.
 
-Common mistakes: skipping an item because it appeared only once; combining unrelated SOPs into one document; splitting every step into a separate SOP; closing after verifying only the two base files. Check the identified items against the returned `sops` paths before closing.
+Common mistakes: generating an SOP about this archiving skill; excluding unrelated SOPs merely because this skill was used to save them; skipping an item because it appeared only once; combining unrelated SOPs into one document; splitting every step into a separate SOP; closing after verifying only the two base files or omitting produced files from `artifacts`. Check the identified items against the returned `sops` paths before closing.
 
 ## Conversation Closing
 

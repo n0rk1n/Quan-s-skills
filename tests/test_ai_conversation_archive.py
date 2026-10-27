@@ -144,6 +144,194 @@ class ArchiveTests(unittest.TestCase):
             self.assertEqual(len(caught.exception.paths['sops']), 2)
             self.assertTrue(Path(caught.exception.paths['transcript']).is_file())
 
+    def artifact(self, name='report.pdf', content=b'%PDF-test\x00\xff'):
+        source = self.downloads / name
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(content)
+        return source
+
+    def test_untracked_artifact_is_copied_and_manifest_links_verified(self):
+        import hashlib
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        result = self.save(data)
+        self.assertEqual(len(result.get('artifacts', [])), 1)
+        entry = result['artifacts'][0]
+        destination = Path(entry['path'])
+        self.assertEqual(destination.read_bytes(), source.read_bytes())
+        self.assertEqual(destination.parent, Path(result['directory']))
+        self.assertEqual(entry['sha256'], hashlib.sha256(source.read_bytes()).hexdigest())
+        self.assertEqual(entry['size'], len(source.read_bytes()))
+        manifest = json.loads(Path(result['artifact_manifest']).read_text())
+        self.assertEqual(manifest['artifacts'], result['artifacts'])
+        self.assertIn(quote(destination.name, safe=''), Path(result['retrospective']).read_text())
+
+    def test_git_tracked_is_skipped_but_ignored_and_untracked_are_copied(self):
+        repo = self.downloads / 'repo'; repo.mkdir()
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        (repo / '.gitignore').write_text('ignored.pdf\n')
+        for name in ['tracked.pdf', 'ignored.pdf', 'new.pdf']:
+            (repo / name).write_bytes(name.encode())
+        subprocess.run(['git', '-C', str(repo), 'add', 'tracked.pdf', '.gitignore'], check=True)
+        data = payload(); data['artifacts'] = [str(repo / n) for n in ['tracked.pdf', 'ignored.pdf', 'new.pdf']]
+        result = self.save(data)
+        self.assertEqual(len(result.get('artifacts', [])), 2)
+        self.assertEqual([x['source'] for x in result['skipped_artifacts']], [str(repo / 'tracked.pdf')])
+        self.assertEqual({Path(x['path']).read_bytes() for x in result['artifacts']}, {b'ignored.pdf', b'new.pdf'})
+
+    def test_non_repository_artifact_is_copied(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'outside.txt'; source.write_text('outside')
+            data = payload(); data['artifacts'] = [str(source)]
+            result = self.save(data)
+            self.assertEqual(len(result.get('artifacts', [])), 1)
+            self.assertEqual(Path(result['artifacts'][0]['path']).read_text(), 'outside')
+
+    def test_same_basename_duplicate_inputs_and_repeated_runs_preserve_files(self):
+        first = self.artifact('a/report.pdf', b'first')
+        second = self.artifact('b/report.pdf', b'second')
+        data = payload(); data['artifacts'] = [str(first), str(second), str(first)]
+        one = self.save(data); two = self.save(data)
+        self.assertEqual(len(one.get('artifacts', [])), 2)
+        paths = [x['path'] for r in [one, two] for x in r['artifacts']]
+        self.assertEqual(len(set(paths)), 4)
+        self.assertEqual([Path(p).read_bytes() for p in paths], [b'first', b'second', b'first', b'second'])
+        self.assertEqual(first.read_bytes(), b'first')
+        self.assertNotEqual(one['artifact_manifest'], two['artifact_manifest'])
+
+    def test_invalid_or_missing_artifact_fails_before_archive_write(self):
+        link = self.downloads / 'link'; link.symlink_to(self.artifact())
+        for values in [None, {}, ['relative.txt'], [str(self.downloads / 'missing')],
+                       [str(self.downloads)], [str(link)], [123]]:
+            data = payload(); data['artifacts'] = values
+            with self.subTest(values=values), self.assertRaises((ValueError, OSError)):
+                self.save(data)
+        self.assertFalse((self.downloads / '2026-09-07 Archived AI Conversations').exists())
+
+    def test_artifact_copy_failure_preserves_markdown_and_reports_paths(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        with patch.object(self.module, 'copy_artifact', side_effect=OSError('copy failed'), create=True):
+            with self.assertRaises(self.module.ArchiveError) as caught:
+                self.save(data)
+        self.assertTrue(Path(caught.exception.paths['transcript']).is_file())
+        self.assertEqual(len(caught.exception.paths['artifacts']), 1)
+        self.assertTrue(source.is_file())
+
+    def test_artifact_readback_corruption_fails_verification(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        def corrupt(src, dest):
+            dest.write_bytes(b'corrupt')
+        with patch.object(self.module, 'copy_artifact', side_effect=corrupt, create=True):
+            with self.assertRaises(self.module.ArchiveError):
+                self.save(data)
+        self.assertTrue(source.is_file())
+
+    def test_archive_skill_sops_are_excluded_but_unrelated_sops_remain(self):
+        data = self.sop_payload()
+        data['sops'][0]['scope'] = 'archiving-ai-conversation'
+        data['sops'][1]['scope'] = 'general'
+        result = self.save(data)
+        self.assertEqual(len(result['sops']), 1)
+        self.assertIn('报告格式', Path(result['sops'][0]).name)
+        self.assertEqual(result['skipped_sops'], ['文件校验'])
+        self.assertIn('归档技能自身', Path(result['retrospective']).read_text())
+
+    def test_only_archive_skill_sops_produce_no_sop_file(self):
+        data = self.sop_payload()
+        for item in data['sops']:
+            item['scope'] = 'archiving-ai-conversation'
+        result = self.save(data)
+        self.assertEqual(result['sops'], [])
+        self.assertIn('归档技能自身', Path(result['retrospective']).read_text())
+
+    def test_invalid_sop_scope_is_not_silently_accepted(self):
+        data = self.sop_payload(); data['sops'][0]['scope'] = 'typo'
+        with self.assertRaises(ValueError):
+            self.save(data)
+
+    def test_excluded_sop_needs_no_sections(self):
+        data = payload()
+        data['sops'] = [{'title': '归档技能维护', 'scope': 'archiving-ai-conversation'}]
+        result = self.save(data)
+        self.assertEqual(result['sops'], [])
+        self.assertEqual(result['skipped_sops'], ['归档技能维护'])
+
+    def test_concurrent_artifact_runs_do_not_overwrite(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(lambda _: self.save(data), range(4)))
+        self.assertEqual(len({r['artifacts'][0]['path'] for r in results}), 4)
+        for result in results:
+            self.assertEqual(Path(result['artifacts'][0]['path']).read_bytes(), source.read_bytes())
+            self.assertTrue(Path(result['artifact_manifest']).is_file())
+
+    def test_git_failure_does_not_guess_untracked(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        failure = subprocess.CompletedProcess(['git'], 128, b'', b'fatal: detected dubious ownership')
+        with patch.object(self.module.subprocess, 'run', return_value=failure):
+            with self.assertRaises(OSError):
+                self.save(data)
+        self.assertFalse((self.downloads / '2026-09-07 Archived AI Conversations').exists())
+
+    def test_source_change_during_copy_fails_verification(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        original = self.module.copy_artifact
+        def mutate(src, dst):
+            original(src, dst)
+            src.write_bytes(b'changed')
+        with patch.object(self.module, 'copy_artifact', side_effect=mutate):
+            with self.assertRaises(self.module.ArchiveError):
+                self.save(data)
+
+    def test_manifest_readback_failure_is_not_success(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        original = self.module.write_exclusive
+        def corrupt(path, content):
+            original(path, content + ('corrupt' if path.suffix == '.json' else ''))
+        with patch.object(self.module, 'write_exclusive', side_effect=corrupt):
+            with self.assertRaises(self.module.ArchiveError) as caught:
+                self.save(data)
+        self.assertTrue(Path(caught.exception.paths['artifacts'][0]['path']).is_file())
+
+    def test_git_literal_filename_is_not_a_pattern(self):
+        repo = self.downloads / 'literal'; repo.mkdir()
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        (repo / 'a.txt').write_text('tracked')
+        subprocess.run(['git', '-C', str(repo), 'add', 'a.txt'], check=True)
+        source = repo / '[a].txt'; source.write_text('untracked')
+        data = payload(); data['artifacts'] = [str(source)]
+        result = self.save(data)
+        self.assertEqual(len(result['artifacts']), 1)
+        self.assertEqual(result['skipped_artifacts'], [])
+
+    def test_cli_copies_artifact_and_excludes_archive_skill_sop(self):
+        source = self.artifact()
+        data = payload(); data['artifacts'] = [str(source)]
+        data['sops'] = [{'title': '归档维护', 'scope': 'archiving-ai-conversation'}]
+        process = subprocess.run([sys.executable, '-B', str(SCRIPT), 'save',
+                                  '--downloads-dir', str(self.downloads)],
+                                 input=json.dumps(data), text=True, capture_output=True)
+        self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+        result = json.loads(process.stdout)
+        self.assertTrue(result['verified'])
+        self.assertEqual(Path(result['artifacts'][0]['path']).read_bytes(), source.read_bytes())
+        self.assertEqual(result['sops'], [])
+        self.assertEqual(result['skipped_sops'], ['归档维护'])
+
+    def test_tracked_file_in_current_linked_worktree_is_skipped(self):
+        data = payload(); data['artifacts'] = [str(SCRIPT)]
+        result = self.save(data)
+        self.assertEqual(result['artifacts'], [])
+        self.assertEqual(result['skipped_artifacts'][0]['source'], str(SCRIPT.resolve()))
+        self.assertEqual(Path(result['skipped_artifacts'][0]['repository']), ROOT.resolve())
+        self.assertTrue(Path(result['artifact_manifest']).is_file())
+
     def test_missing_downloads_is_not_silently_created(self):
         with self.assertRaises(OSError):
             self.module.archive(payload(), self.downloads / 'missing', '2026-09-07')
